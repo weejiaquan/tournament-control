@@ -134,10 +134,23 @@ app.post('/api/background', (req, res) => {
     res.json({ success: true });
   });
   
-  app.get('/api/background', (req, res) => {
-    res.json({ backgroundImage: backgroundState.currentBackground });
-  });
+app.get('/api/background', (req, res) => {
+  res.json({ backgroundImage: backgroundState.currentBackground });
+});
   
+let sceneState = {
+  currentScene: 'landing' // or 'timer'
+};
+
+app.post('/api/scene', (req, res) => {
+  const { scene } = req.body;
+  sceneState.currentScene = scene;
+  res.json({ success: true, currentScene: scene });
+});
+
+app.get('/api/scene', (req, res) => {
+  res.json({ currentScene: sceneState.currentScene });
+});
 
 app.use(express.static('dist'));
 app.get('*', (req, res) => {

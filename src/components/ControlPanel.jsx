@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { API_URL } from '../config';
+import GlobalStyle from '../styles/GlobalStyle';
+import { motion } from 'framer-motion';
 
 const ControlPanel = () => {
   const [inputTime, setInputTime] = useState('30:00');
@@ -9,6 +11,7 @@ const ControlPanel = () => {
   const [images, setImages] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [currentScene, setCurrentScene] = useState('landing');
 
 
   useEffect(() => {
@@ -76,6 +79,19 @@ const ControlPanel = () => {
       });
     } catch (error) {
       console.error('Failed to clear background:', error);
+    }
+  };
+
+  const handleSceneChange = async (scene) => {
+    try {
+      await fetch(`${API_URL}/api/scene`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ scene })
+      });
+      setCurrentScene(scene);
+    } catch (error) {
+      console.error('Failed to change scene:', error);
     }
   };
 
@@ -153,9 +169,28 @@ const ControlPanel = () => {
   };
 
   return (
+    <>
+    <GlobalStyle />
     <Container>
       <ControlBox>
-      <Title>Timer Control Panel</Title>
+      <Title>Control Panel</Title>
+      <SceneSelector>
+        <SectionTitle>Scene Selection</SectionTitle>
+        <ButtonGroup>
+          <SceneButton 
+            $active={currentScene === 'landing'}
+            onClick={() => handleSceneChange('landing')}
+          >
+            Landing
+          </SceneButton>
+          <SceneButton 
+            $active={currentScene === 'timer'}
+            onClick={() => handleSceneChange('timer')}
+          >
+            Timer
+          </SceneButton>
+        </ButtonGroup>
+      </SceneSelector>
         <Form onSubmit={handleTimeSubmit}>
           <InputGroup>
             <Label htmlFor="time">Set Time (MMSS):</Label>
@@ -240,6 +275,7 @@ const ControlPanel = () => {
         </GallerySection>
       </ControlBox>
     </Container>
+    </>
   );
 };
 
@@ -263,7 +299,8 @@ const Container = styled.div`
   align-items: center;
   min-height: 100vh;
   padding: 20px;
-  background-color: #f5f5f5;
+  background-color:rgb(63, 63, 63);
+  font-family: 'Arial', sans-serif;
 `;
 
 const ControlBox = styled.div`
@@ -406,5 +443,25 @@ const UploadButton = styled.div`
   }
 `;
 
+const SceneSelector = styled.div`
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #eee;
+`;
+
+const SceneButton = styled.button`
+  padding: 10px 20px;
+  font-size: 1rem;
+  border: none;
+  border-radius: 4px;
+  background: ${props => props.$active ? '#007bff' : '#6c757d'};
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background: ${props => props.$active ? '#0056b3' : '#5a6268'};
+  }
+`;
 
 export default ControlPanel;
