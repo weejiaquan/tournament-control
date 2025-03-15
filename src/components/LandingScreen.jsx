@@ -5,7 +5,7 @@ import styled, { keyframes } from 'styled-components';
 import Clock from './Clock';
 import MenuScreen from './MenuScreen';
 import YouTubeEmbed from './YoutubeEmbed';
-
+import Timer from './Timer';
 
 const gradient = keyframes`
   0% {
@@ -21,7 +21,54 @@ const gradient = keyframes`
 
 const LandingScreen = () => {
   const [backgroundImage, setBackgroundImage] = useState('');
-  const [videoId, setVideoId] = useState(''); // Add this state
+  const [videoId, setVideoId] = useState('');
+  const [timerState, setTimerState] = useState({ time: 0, isRunning: false });
+  const [isTimerVisible, setIsTimerVisible] = useState(false);
+  const [isFading, setIsFading] = useState(false);
+
+  const fetchTimerState = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/timer`);
+      const data = await response.json();
+      setTimerState(data);
+    } catch (error) {
+      console.error('Failed to fetch timer state:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchTimerState();
+    const timerInterval = setInterval(fetchTimerState, 1000);
+    return () => clearInterval(timerInterval);
+  }, []); 
+
+  useEffect(() => {
+    if (timerState.isRunning && !isTimerVisible) {
+      setIsTimerVisible(true);
+    } else if (!timerState.isRunning && isTimerVisible) {
+      const timer = document.querySelector('.timer-container');
+      if (timer) {
+        timer.classList.add('fade-out');
+        setTimeout(() => {
+          setIsTimerVisible(false);
+        }, 500); // Match this with animation duration
+      }
+    }
+  }, [timerState.isRunning, isTimerVisible]);
+
+  useEffect(() => {
+    if (timerState.isRunning && !isTimerVisible) {
+      setIsFading(false);
+      setIsTimerVisible(true);
+    } else if (!timerState.isRunning && isTimerVisible) {
+      setIsFading(true);
+      setTimeout(() => {
+        setIsTimerVisible(false);
+        setIsFading(false);
+      }, 500);
+    }
+  }, [timerState.isRunning, isTimerVisible]);
+
 
   useEffect(() => {
     const fetchBackground = async () => {
@@ -63,6 +110,7 @@ const LandingScreen = () => {
     <GlobalStyle />
     <Container $backgroundImage={backgroundImage}>
     <Clock />
+    {isTimerVisible && <Timer time={timerState.time} className={isFading ? 'fade-out' : ''} />}
     <ContentWrapper>
     <DefaultText $hasVideo={!!videoId}>
         Welcome to The Trading Gallery 
