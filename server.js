@@ -4,6 +4,7 @@ import multer from 'multer';  // Add this import
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';  // Add this import
+import { v4 as uuidv4 } from 'uuid';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -37,7 +38,8 @@ const HOST = '0.0.0.0';  // Allow access from network
 app.use(cors());
 app.use(express.json());
 
-// Timer state
+// TIMER API //
+
 let timerState = {
   time: 1800,
   isRunning: false
@@ -68,7 +70,6 @@ const stopTimer = () => {
   }
 };
 
-// API endpoints
 app.get('/api/timer', (req, res) => {
   res.json(timerState);
 });
@@ -100,6 +101,8 @@ app.post('/api/timer/toggle', (req, res) => {
   }
   res.json(timerState);
 });
+
+// Background image API //
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
@@ -142,6 +145,8 @@ let sceneState = {
   currentScene: 'landing' // or 'timer'
 };
 
+//SCENE API//
+
 app.post('/api/scene', (req, res) => {
   const { scene } = req.body;
   sceneState.currentScene = scene;
@@ -150,6 +155,92 @@ app.post('/api/scene', (req, res) => {
 
 app.get('/api/scene', (req, res) => {
   res.json({ currentScene: sceneState.currentScene });
+});
+
+// MENU API//
+
+// Create directory for menu item uploads
+const menuUploadsDir = path.join(__dirname, 'uploads', 'menu');
+if (!fs.existsSync(menuUploadsDir)) {
+  fs.mkdirSync(menuUploadsDir, { recursive: true });
+}
+
+// Configure multer for menu item uploads
+const menuStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, menuUploadsDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+
+const menuUpload = multer({ storage: menuStorage });
+
+let menuState = {
+  items: [],
+  isVisible: true
+};
+
+// Add these endpoints
+app.post('/api/menu/upload', menuUpload.single('menuItem'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'No file uploaded' });
+  }
+
+  const newItem = {
+    id: uuidv4(),
+    imageUrl: `/uploads/menu/${req.file.filename}`,
+    unavailable: false
+  };
+
+  menuState.items.push(newItem);
+  res.json(newItem);
+});
+
+app.get('/api/menu/items', (req, res) => {
+  res.json(menuState.items);
+});
+
+app.patch('/api/menu/items/:id/toggle', (req, res) => {
+  const item = menuState.items.find(item => item.id === req.params.id);
+  if (!item) {
+    return res.status(404).json({ error: 'Item not found' });
+  }
+
+  item.unavailable = !item.unavailable;
+  res.json(item);
+});
+
+app.delete('/api/menu/items/:id', (req, res) => {
+  const itemIndex = menuState.items.findIndex(item => item.id === req.params.id);
+  if (itemIndex === -1) {
+    return res.status(404).json({ error: 'Item not found' });
+  }
+
+  const item = menuState.items[itemIndex];
+  const filename = item.imageUrl.split('/').pop();
+  const filepath = path.join(menuUploadsDir, filename);
+
+  fs.unlink(filepath, (err) => {
+    if (err) {
+      return res.status(500).json({ error: 'Failed to delete image file' });
+    }
+    menuState.items.splice(itemIndex, 1);
+    res.json({ success: true });
+  });
+});
+
+app.post('/api/menu/visibility', (req, res) => {
+  const { isVisible } = req.body;
+  menuState.isVisible = isVisible;
+  res.json({ success: true, isVisible });
+});
+
+app.get('/api/menu/visibility', (req, res) => {
+  res.json({ isVisible: menuState.isVisible });
 });
 
 app.use(express.static('dist'));

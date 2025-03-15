@@ -3,6 +3,7 @@ import { API_URL } from '../config';
 import GlobalStyle from '../styles/GlobalStyle';
 import styled, { keyframes } from 'styled-components';
 import Clock from './Clock';
+import MenuScreen from './MenuScreen';
 
 
 const gradient = keyframes`
@@ -50,6 +51,7 @@ const LandingScreen = () => {
         <br />
         <span className="japanese">トレーディングギャラリーへようこそ</span>
       </DefaultText>
+      <MenuScreen />
     </Container>
   </>
   );

@@ -5,7 +5,7 @@ import { keyframes } from 'styled-components';
 import GlobalStyle from '../styles/GlobalStyle';
 import Clock from './Clock';
 import yonakaLogo from '../../assets/yonaka_logo.png'; // Add this import
-
+import MenuScreen from './MenuScreen';
 
 const gradient = keyframes`
   0% {
@@ -85,7 +85,8 @@ const App = () => {
     <LogoContainer>
         <PoweredByText>Powered by</PoweredByText>
         <Logo src={yonakaLogo} alt="Yonaka Logo" />
-      </LogoContainer>
+      </LogoContainer>0
+    <MenuScreen />
     </Container>
 
   );
@@ -121,6 +122,7 @@ const LogoContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
+  z-index: 1000;
 `;
 
 const PoweredByText = styled.span`
