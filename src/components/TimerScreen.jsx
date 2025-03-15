@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { API_URL } from '../config';
 import { keyframes } from 'styled-components';
 import GlobalStyle from '../styles/GlobalStyle';
-
+import Clock from './Clock';
 import yonakaLogo from '../../assets/yonaka_logo.png'; // Add this import
 
 
@@ -28,8 +28,10 @@ const App = () => {
     const fetchTimer = async () => {
       const response = await fetch(`${API_URL}/api/timer`);
       const data = await response.json();
-      setTime(data.time);
-      setIsRunning(data.isRunning);
+      if (data.time !== time || data.isRunning !== isRunning) {
+        setTime(data.time);
+        setIsRunning(data.isRunning);
+      }
     };
 
     fetchTimer();
@@ -74,7 +76,9 @@ const App = () => {
   };
 
   return (
+
     <Container $backgroundImage={backgroundImage}>
+    <Clock />
     <Timer $timeColor={getTimerColor(time)}>
       {formatTime(time)}
     </Timer>
@@ -83,6 +87,7 @@ const App = () => {
         <Logo src={yonakaLogo} alt="Yonaka Logo" />
       </LogoContainer>
     </Container>
+
   );
 };
 
@@ -133,13 +138,14 @@ const Logo = styled.img`
 const Timer = styled.div`
   color: transparent;
   font-size: 25rem;
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'DM Mono', sans-serif;
   
   text-align: center;
   letter-spacing: 2px;
   line-height: 1.5;
   padding: 20px;
   border-radius: 10px;
+
   text-shadow: 
     0 0 7px rgba(255,255,255,0.2),
     0 0 10px rgba(255,255,255,0.2),

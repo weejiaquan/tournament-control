@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { API_URL } from '../config';
 import GlobalStyle from '../styles/GlobalStyle';
 import styled, { keyframes } from 'styled-components';
-
+import Clock from './Clock';
 
 
 const gradient = keyframes`
@@ -19,7 +19,6 @@ const gradient = keyframes`
 
 const LandingScreen = () => {
   const [backgroundImage, setBackgroundImage] = useState('');
-  const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
     const fetchBackground = async () => {
@@ -35,29 +34,21 @@ const LandingScreen = () => {
     fetchBackground();
 
     const bgInterval = setInterval(fetchBackground, 1000);
-    // Poll for background changes
-    // New time update effect
-    const timeInterval = setInterval(() => {
-        setCurrentTime(new Date());
-      }, 1000);
   
-      // Cleanup both intervals
-      return () => {
-        clearInterval(bgInterval);
-        clearInterval(timeInterval);
-      };
+    return () => {
+    clearInterval(bgInterval);
+    };
   }, []);
 
   return (
     <>
     <GlobalStyle />
     <Container $backgroundImage={backgroundImage}>
+    <Clock />
       <DefaultText>
         Welcome to The Trading Gallery 
         <br />
         <span className="japanese">トレーディングギャラリーへようこそ</span>
-        <br />
-        {currentTime.toLocaleTimeString()}
       </DefaultText>
     </Container>
   </>
