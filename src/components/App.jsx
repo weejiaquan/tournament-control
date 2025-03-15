@@ -34,7 +34,7 @@ const gradientFlow = keyframes`
 `;
 
 const App = () => {
-  const [time, setTime] = useState(1200);
+  const [time, setTime] = useState(1800);
   const [isRunning, setIsRunning] = useState(false);
   const [backgroundImage, setBackgroundImage] = useState('');
 

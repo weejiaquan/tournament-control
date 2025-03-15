@@ -39,7 +39,7 @@ app.use(express.json());
 
 // Timer state
 let timerState = {
-  time: 1200,
+  time: 1800,
   isRunning: false
 };
 

@@ -3,8 +3,8 @@ import styled from 'styled-components';
 import { API_URL } from '../config';
 
 const ControlPanel = () => {
-  const [inputTime, setInputTime] = useState('20:00');
-  const [timerState, setTimerState] = useState({ time: 1200, isRunning: false });
+  const [inputTime, setInputTime] = useState('30:00');
+  const [timerState, setTimerState] = useState({ time: 1800, isRunning: false });
 
   const [images, setImages] = useState([]);
   const [uploading, setUploading] = useState(false);
