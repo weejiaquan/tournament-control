@@ -19,6 +19,8 @@ const ControlPanel = () => {
   const [menuVisible, setMenuVisible] = useState(true);
 
   const [activeTab, setActiveTab] = useState("main");
+  const [videoUrl, setVideoUrl] = useState('');
+
 
   useEffect(() => {
     fetchImages();
@@ -171,6 +173,31 @@ const ControlPanel = () => {
       setTimerState(data);
     } catch (error) {
       console.error("Failed to toggle timer:", error);
+    }
+  };
+
+  const handleVideoSubmit = async () => {
+    // Extract video ID from URL
+    const videoId = videoUrl.match(/(?:youtu\.be\/|youtube\.com(?:\/embed\/|\/v\/|\/watch\?v=|\/watch\?.+&v=))([^"&?\/\s]{11})/)?.[1];
+    
+    if (!videoId && videoUrl!== '') {
+      alert('Please enter a valid YouTube URL');
+      return;
+    }
+  
+    try {
+      const response = await fetch(`${API_URL}/api/video`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ videoId }),
+      });
+      
+      if (!response.ok) throw new Error('Failed to update video');
+      setVideoUrl('');
+    } catch (error) {
+      console.error('Error updating video:', error);
     }
   };
 
@@ -345,6 +372,22 @@ const ControlPanel = () => {
               Current Time: {Math.floor(timerState.time / 60)}:
               {(timerState.time % 60).toString().padStart(2, "0")}
             </StatusText>
+            <Section>
+              <h2>YouTube Video Control</h2>
+              <InputGroup>
+                <Input
+                  type="text"
+                  value={videoUrl}
+                  onChange={(e) => setVideoUrl(e.target.value)}
+                  placeholder="Paste YouTube URL here"
+                />
+                <Button onClick={handleVideoSubmit}>Set Video</Button>
+                <Button onClick={() => {
+                  setVideoUrl('');
+                  handleVideoSubmit();
+                }}>Clear Video</Button>
+              </InputGroup>
+            </Section>
           </TabContent>
           <TabContent $active={activeTab === "background"}>
             <GallerySection>
@@ -449,6 +492,12 @@ const ClearButton = styled.button`
   &:hover {
     background: #5a6268;
   }
+`;
+
+const Section = styled.div`
+  margin: 2rem 0;
+  padding: 1rem 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 `;
 
 const Container = styled.div`

@@ -4,6 +4,7 @@ import GlobalStyle from '../styles/GlobalStyle';
 import styled, { keyframes } from 'styled-components';
 import Clock from './Clock';
 import MenuScreen from './MenuScreen';
+import YouTubeEmbed from './YoutubeEmbed';
 
 
 const gradient = keyframes`
@@ -20,6 +21,7 @@ const gradient = keyframes`
 
 const LandingScreen = () => {
   const [backgroundImage, setBackgroundImage] = useState('');
+  const [videoId, setVideoId] = useState(''); // Add this state
 
   useEffect(() => {
     const fetchBackground = async () => {
@@ -35,9 +37,24 @@ const LandingScreen = () => {
     fetchBackground();
 
     const bgInterval = setInterval(fetchBackground, 1000);
+
+    const fetchVideo = async () => {
+        try {
+          const response = await fetch(`${API_URL}/api/video`);
+          const data = await response.json();
+          setVideoId(data.videoId);
+        } catch (error) {
+          console.error('Failed to fetch video:', error);
+        }
+      };
+  
+      fetchVideo();
+
+      const videoInterval = setInterval(fetchVideo, 1000);
   
     return () => {
     clearInterval(bgInterval);
+    clearInterval(videoInterval);
     };
   }, []);
 
@@ -46,11 +63,14 @@ const LandingScreen = () => {
     <GlobalStyle />
     <Container $backgroundImage={backgroundImage}>
     <Clock />
-      <DefaultText>
+    <ContentWrapper>
+    <DefaultText $hasVideo={!!videoId}>
         Welcome to The Trading Gallery 
         <br />
         <span className="japanese">トレーディングギャラリーへようこそ</span>
-      </DefaultText>
+        </DefaultText>
+        {videoId && <YouTubeEmbed videoId={videoId} />}
+        </ContentWrapper>
       <MenuScreen />
     </Container>
   </>
@@ -69,16 +89,31 @@ const Container = styled.div`
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+  position: relative;
+`;
+
+const ContentWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  height: 100%;
 `;
 
 const DefaultText = styled.h1`
+  position: absolute;
+  top: ${props => props.$hasVideo ? '10%' : '50%'};
+  transform: translateY(-50%);
+  margin: 0;
+  z-index: 1;
+
   color: transparent;
   font-size: 3.5rem;
   font-family: 'DM Sans', sans-serif;
 
-　.japanese {
+  .japanese {
     font-family: 'Noto Sans JP', sans-serif;
-    font-size: 3.2rem; /* Slightly smaller to match visual weight */
+    font-size: 3.2rem;
   }
 
   text-align: center;
@@ -105,6 +140,19 @@ const DefaultText = styled.h1`
 
   br {
     margin: 10px 0;
+  }
+
+  transition: top 0.5s ease-in-out;
+`;
+
+const slideUp = keyframes`
+  from {
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  to {
+    top: 5%;
+    transform: translateY(-50%);
   }
 `;
 

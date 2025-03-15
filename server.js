@@ -243,6 +243,21 @@ app.get('/api/menu/visibility', (req, res) => {
   res.json({ isVisible: menuState.isVisible });
 });
 
+let videoState = {
+  videoId: ''
+};
+
+// Add these endpoints before the static file serving
+app.post('/api/video', (req, res) => {
+  const { videoId } = req.body;
+  videoState.videoId = videoId;
+  res.json({ success: true, videoId });
+});
+
+app.get('/api/video', (req, res) => {
+  res.json({ videoId: videoState.videoId });
+});
+
 app.use(express.static('dist'));
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
