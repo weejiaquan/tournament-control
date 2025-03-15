@@ -151,6 +151,7 @@ const ContentWrapper = styled.div`
 const DefaultText = styled.h1`
   position: absolute;
   top: ${props => props.$hasVideo ? '10%' : '50%'};
+  opacity: ${props => props.$hasVideo ? 0 : 1};
   transform: translateY(-50%);
   margin: 0;
   z-index: 1;
@@ -190,18 +191,7 @@ const DefaultText = styled.h1`
     margin: 10px 0;
   }
 
-  transition: top 0.5s ease-in-out;
-`;
-
-const slideUp = keyframes`
-  from {
-    top: 50%;
-    transform: translateY(-50%);
-  }
-  to {
-    top: 5%;
-    transform: translateY(-50%);
-  }
+  transition: top 0.5s ease-in-out, opacity 0.5s ease-in-out;
 `;
 
 export default LandingScreen;

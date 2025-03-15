@@ -70,7 +70,7 @@ const App = () => {
       return 'linear-gradient(45deg, #ff0000, #ff6666, #ff0000)';  // Bright red neon
     }
     if (seconds <= 300) {
-      return 'linear-gradient(45deg,rgb(255, 255, 255), #dfb150)';  // Bright yellow neon
+      return 'linear-gradient(45deg, #ffffff, #ff7b00)';  // Bright yellow neon
     }
     return 'linear-gradient(45deg, #ffdf00, #ffffff)';  // Cyan neon
   };

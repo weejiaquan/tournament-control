@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 
 const Clock = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -19,6 +19,18 @@ const Clock = () => {
   );
 };
 
+const gradient = keyframes`
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+`;
+
 const ClockContainer = styled.div`
   position: fixed;
   top: 0;
@@ -34,6 +46,8 @@ const ClockContainer = styled.div`
     0 0 82px rgba(255,255,255,0.1);
   background: linear-gradient(300deg, #ffdf00, #ffffff);
   background-size: 300% 300%;
+  animation: ${gradient} 12s ease infinite;
+
   -webkit-background-clip: text;
   background-clip: text;
 `;

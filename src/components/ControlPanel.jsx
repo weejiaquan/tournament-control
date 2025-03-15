@@ -3,6 +3,12 @@ import styled from "styled-components";
 import { API_URL } from "../config";
 import GlobalStyle from "../styles/GlobalStyle";
 
+const GlobalOverride = styled.div`
+  html, body, #root {
+    overflow: auto !important;
+  }
+`;
+
 const ControlPanel = () => {
   const [inputTime, setInputTime] = useState("30:00");
   const [timerState, setTimerState] = useState({
@@ -52,6 +58,12 @@ const ControlPanel = () => {
   };
 
   const handleImageDelete = async (imageUrl) => {
+    const isConfirmed = window.confirm("Are you sure you want to delete this image?");
+  
+    if (!isConfirmed) {
+      return; // Exit if user cancels
+    }
+
     try {
       const filename = imageUrl.split("/").pop();
       await fetch(`${API_URL}/api/images/${filename}`, {
@@ -233,6 +245,12 @@ const ControlPanel = () => {
   };
 
   const handleMenuItemDelete = async (itemId) => {
+    const isConfirmed = window.confirm("Are you sure you want to delete this image?");
+  
+    if (!isConfirmed) {
+      return; // Exit if user cancels
+    }
+
     try {
       const response = await fetch(`${API_URL}/api/menu/items/${itemId}`, {
         method: "DELETE",
@@ -287,8 +305,8 @@ const ControlPanel = () => {
   return (
     <>
       <GlobalStyle />
+      <GlobalOverride />
       <Container>
-        <ControlBox>
           <Title>Control Panel</Title>
 
           <TabContainer>
@@ -334,6 +352,30 @@ const ControlPanel = () => {
               <InputGroup>
                 <SectionTitle>Timer Settings</SectionTitle>
                 <Label htmlFor="time">Set Time (MMSS):</Label>
+                <QuickTimerButtons>
+                  {[60, 50, 45, 40, 35, 30, 25, 20, 15].map((minutes) => (
+                    <QuickTimerButton
+                      key={minutes}
+                      type="button"
+                      onClick={async () => {
+                        try {
+                          const response = await fetch(`${API_URL}/api/timer/set`, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ time: minutes * 60 }),
+                          });
+                          const data = await response.json();
+                          setTimerState(data);
+                          setInputTime(`${minutes}:00`);
+                        } catch (error) {
+                          console.error("Failed to set timer:", error);
+                        }
+                      }}
+                    >
+                      {minutes}min
+                    </QuickTimerButton>
+                  ))}
+                </QuickTimerButtons>
                 <Input
                   type="text"
                   id="time"
@@ -474,7 +516,6 @@ const ControlPanel = () => {
               </MenuItemsGrid>
             </MenuSection>
           </TabContent>
-        </ControlBox>
       </Container>
     </>
   );
@@ -502,17 +543,19 @@ const Section = styled.div`
 
 const Container = styled.div`
   min-height: 100vh;
-  min-width: 100vw;
-  background-color: rgb(63, 63, 63);
-  font-family: 'DM Sans', sans-serif;
-`;
-
-const ControlBox = styled.div`
-  background: black;
-  padding: 2rem;
-  min-height: 100vh;
   width: 100%;
-  
+  background-color: black;
+  font-family: 'DM Sans', sans-serif;
+  color: white;
+  padding: 2rem;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+
   /* Add custom scrollbar styling */
   &::-webkit-scrollbar {
     width: 8px;
@@ -755,4 +798,27 @@ const TabContent = styled.div`
   margin-right: auto;
   padding: 0 2rem;
 `;
+
+const QuickTimerButtons = styled.div`
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 10px 0;
+`;
+
+const QuickTimerButton = styled.button`
+  padding: 8px;
+  font-size: 0.9rem;
+  border: none;
+  border-radius: 4px;
+  background: #444;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background: #666;
+  }
+`;
+
 export default ControlPanel;
