@@ -25,8 +25,7 @@ const ControlPanel = () => {
   const [menuVisible, setMenuVisible] = useState(true);
 
   const [activeTab, setActiveTab] = useState("main");
-  const [videoUrl, setVideoUrl] = useState('');
-
+  const [videoUrl, setVideoUrl] = useState("");
 
   useEffect(() => {
     fetchImages();
@@ -58,8 +57,10 @@ const ControlPanel = () => {
   };
 
   const handleImageDelete = async (imageUrl) => {
-    const isConfirmed = window.confirm("Are you sure you want to delete this image?");
-  
+    const isConfirmed = window.confirm(
+      "Are you sure you want to delete this image?"
+    );
+
     if (!isConfirmed) {
       return; // Exit if user cancels
     }
@@ -190,26 +191,28 @@ const ControlPanel = () => {
 
   const handleVideoSubmit = async () => {
     // Extract video ID from URL
-    const videoId = videoUrl.match(/(?:youtu\.be\/|youtube\.com(?:\/embed\/|\/v\/|\/watch\?v=|\/watch\?.+&v=))([^"&?\/\s]{11})/)?.[1];
-    
-    if (!videoId && videoUrl!== '') {
-      alert('Please enter a valid YouTube URL');
+    const videoId = videoUrl.match(
+      /(?:youtu\.be\/|youtube\.com(?:\/embed\/|\/v\/|\/watch\?v=|\/watch\?.+&v=))([^"&?\/\s]{11})/
+    )?.[1];
+
+    if (!videoId && videoUrl !== "") {
+      alert("Please enter a valid YouTube URL");
       return;
     }
-  
+
     try {
       const response = await fetch(`${API_URL}/api/video`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ videoId }),
       });
-      
-      if (!response.ok) throw new Error('Failed to update video');
-      setVideoUrl('');
+
+      if (!response.ok) throw new Error("Failed to update video");
+      setVideoUrl("");
     } catch (error) {
-      console.error('Error updating video:', error);
+      console.error("Error updating video:", error);
     }
   };
 
@@ -245,8 +248,10 @@ const ControlPanel = () => {
   };
 
   const handleMenuItemDelete = async (itemId) => {
-    const isConfirmed = window.confirm("Are you sure you want to delete this image?");
-  
+    const isConfirmed = window.confirm(
+      "Are you sure you want to delete this image?"
+    );
+
     if (!isConfirmed) {
       return; // Exit if user cancels
     }
@@ -307,215 +312,218 @@ const ControlPanel = () => {
       <GlobalStyle />
       <GlobalOverride />
       <Container>
-          <Title>Control Panel</Title>
+        <Title>Control Panel</Title>
 
-          <TabContainer>
-            <Tab
-              $active={activeTab === "main"}
-              onClick={() => setActiveTab("main")}
-            >
-              Main
-            </Tab>
-            <Tab
-              $active={activeTab === "background"}
-              onClick={() => setActiveTab("background")}
-            >
-              Background
-            </Tab>
-            <Tab
-              $active={activeTab === "menu"}
-              onClick={() => setActiveTab("menu")}
-            >
-              Menu
-            </Tab>
-          </TabContainer>
+        <TabContainer>
+          <Tab
+            $active={activeTab === "main"}
+            onClick={() => setActiveTab("main")}
+          >
+            Main
+          </Tab>
+          <Tab
+            $active={activeTab === "theme"}
+            onClick={() => setActiveTab("theme")}
+          >
+            Theme
+          </Tab>
+          <Tab
+            $active={activeTab === "menu"}
+            onClick={() => setActiveTab("menu")}
+          >
+            Menu
+          </Tab>
+        </TabContainer>
 
-          <TabContent $active={activeTab === "main"}>
-            <SceneSelector>
-              <SectionTitle>Scene Selection</SectionTitle>
-              <ButtonGroup>
-                <SceneButton
-                  $active={currentScene === "landing"}
-                  onClick={() => handleSceneChange("landing")}
-                >
-                  Landing
-                </SceneButton>
-                <SceneButton
-                  $active={currentScene === "timer"}
-                  onClick={() => handleSceneChange("timer")}
-                >
-                  Timer
-                </SceneButton>
-              </ButtonGroup>
-            </SceneSelector>
-            <Form onSubmit={handleTimeSubmit}>
-              <InputGroup>
-                <SectionTitle>Timer Settings</SectionTitle>
-                <Label htmlFor="time">Set Time (MMSS):</Label>
-                <QuickTimerButtons>
-                  {[60, 50, 45, 40, 35, 30, 25, 20, 15].map((minutes) => (
-                    <QuickTimerButton
-                      key={minutes}
-                      type="button"
-                      onClick={async () => {
-                        try {
-                          const response = await fetch(`${API_URL}/api/timer/set`, {
+        <TabContent $active={activeTab === "main"}>
+          <SceneSelector>
+            <SectionTitle>Scene Selection</SectionTitle>
+            <ButtonGroup>
+              <SceneButton
+                $active={currentScene === "landing"}
+                onClick={() => handleSceneChange("landing")}
+              >
+                Landing
+              </SceneButton>
+              <SceneButton
+                $active={currentScene === "timer"}
+                onClick={() => handleSceneChange("timer")}
+              >
+                Timer
+              </SceneButton>
+            </ButtonGroup>
+          </SceneSelector>
+          <Form onSubmit={handleTimeSubmit}>
+            <InputGroup>
+              <SectionTitle>Timer Settings</SectionTitle>
+              <Label htmlFor="time">Set Time (MMSS):</Label>
+              <QuickTimerButtons>
+                {[60, 50, 45, 40, 35, 30, 25, 20, 15].map((minutes) => (
+                  <QuickTimerButton
+                    key={minutes}
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        const response = await fetch(
+                          `${API_URL}/api/timer/set`,
+                          {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
                             body: JSON.stringify({ time: minutes * 60 }),
-                          });
-                          const data = await response.json();
-                          setTimerState(data);
-                          setInputTime(`${minutes}:00`);
-                        } catch (error) {
-                          console.error("Failed to set timer:", error);
-                        }
-                      }}
-                    >
-                      {minutes}min
-                    </QuickTimerButton>
-                  ))}
-                </QuickTimerButtons>
-                <Input
-                  type="text"
-                  id="time"
-                  pattern="^(\d{1,4}|\d{1,2}:\d{0,2})$"
-                  value={inputTime}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    if (value.includes(":")) {
-                      // Handle MM:SS format
-                      if (value.length <= 5) {
-                        setInputTime(value);
+                          }
+                        );
+                        const data = await response.json();
+                        setTimerState(data);
+                        setInputTime(`${minutes}:00`);
+                      } catch (error) {
+                        console.error("Failed to set timer:", error);
                       }
-                    } else {
-                      // Handle MMSS format
-                      const numericValue = value.replace(/[^\d]/g, "");
-                      if (numericValue.length <= 4) {
-                        setInputTime(numericValue);
-                      }
-                    }
-                  }}
-                  placeholder="1055 or 10:55"
-                />
-              </InputGroup>
-              <ButtonGroup>
-                <Button type="submit">Set Time</Button>
-                <Button
-                  type="button"
-                  onClick={toggleTimer}
-                  $isRunning={timerState.isRunning}
-                >
-                  {timerState.isRunning ? "Pause" : "Start"}
-                </Button>
-              </ButtonGroup>
-            </Form>
-            <StatusText>
-              Current Time: {Math.floor(timerState.time / 60)}:
-              {(timerState.time % 60).toString().padStart(2, "0")}
-            </StatusText>
-            <Section>
-              <h2>YouTube Video Control</h2>
-              <InputGroup>
-                <Input
-                  type="text"
-                  value={videoUrl}
-                  onChange={(e) => setVideoUrl(e.target.value)}
-                  placeholder="Paste YouTube URL here"
-                />
-                <Button onClick={handleVideoSubmit}>Set Video</Button>
-                <Button onClick={() => {
-                  setVideoUrl('');
-                  handleVideoSubmit();
-                }}>Clear Video</Button>
-              </InputGroup>
-            </Section>
-          </TabContent>
-          <TabContent $active={activeTab === "background"}>
-            <GallerySection>
-              <SectionTitle>Background Images</SectionTitle>
-              <ButtonGroup>
-                <UploadButton>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    style={{ display: "none" }}
-                    id="imageUpload"
-                  />
-                  <label htmlFor="imageUpload">Upload New Background</label>
-                </UploadButton>
-                <ClearButton onClick={clearBackground}>
-                  Clear Background
-                </ClearButton>
-              </ButtonGroup>
-
-              {selectedImage && (
-                <SelectedImageActions>
-                  <Button onClick={() => handleBackgroundSelect(selectedImage)}>
-                    Set as Background
-                  </Button>
-                  <DeleteButton
-                    onClick={() => handleImageDelete(selectedImage)}
+                    }}
                   >
-                    Delete Image
-                  </DeleteButton>
-                </SelectedImageActions>
-              )}
-
-              <ImageGrid>
-                {images.map((image, index) => (
-                  <ImageThumbnail
-                    key={index}
-                    onClick={() => setSelectedImage(image.url)}
-                    src={image.url}
-                    alt={`Background ${index + 1}`}
-                    $isSelected={selectedImage === image.url}
-                  />
+                    {minutes}min
+                  </QuickTimerButton>
                 ))}
-              </ImageGrid>
-            </GallerySection>
-          </TabContent>
-          <TabContent $active={activeTab === "menu"}>
-            <MenuSection>
-              <SectionTitle>Menu Items</SectionTitle>
-              <ButtonGroup>
-                <UploadButton>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleMenuItemUpload}
-                    style={{ display: "none" }}
-                    id="menuItemUpload"
-                  />
-                  <label htmlFor="menuItemUpload">Add Menu Item</label>
-                </UploadButton>
-                <Button onClick={toggleMenuVisibility} $active={menuVisible}>
-                  {menuVisible ? "Hide Menu" : "Show Menu"}
+              </QuickTimerButtons>
+              <Input
+                type="text"
+                id="time"
+                pattern="^(\d{1,4}|\d{1,2}:\d{0,2})$"
+                value={inputTime}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value.includes(":")) {
+                    // Handle MM:SS format
+                    if (value.length <= 5) {
+                      setInputTime(value);
+                    }
+                  } else {
+                    // Handle MMSS format
+                    const numericValue = value.replace(/[^\d]/g, "");
+                    if (numericValue.length <= 4) {
+                      setInputTime(numericValue);
+                    }
+                  }
+                }}
+                placeholder="1055 or 10:55"
+              />
+            </InputGroup>
+            <ButtonGroup>
+              <Button type="submit">Set Time</Button>
+              <Button
+                type="button"
+                onClick={toggleTimer}
+                $isRunning={timerState.isRunning}
+              >
+                {timerState.isRunning ? "Pause" : "Start"}
+              </Button>
+            </ButtonGroup>
+          </Form>
+          <StatusText>
+            Current Time: {Math.floor(timerState.time / 60)}:
+            {(timerState.time % 60).toString().padStart(2, "0")}
+          </StatusText>
+          <Section>
+            <h2>YouTube Video Control</h2>
+            <InputGroup>
+              <Input
+                type="text"
+                value={videoUrl}
+                onChange={(e) => setVideoUrl(e.target.value)}
+                placeholder="Paste YouTube URL here"
+              />
+              <Button onClick={handleVideoSubmit}>Set Video</Button>
+              <Button
+                onClick={() => {
+                  setVideoUrl("");
+                  handleVideoSubmit();
+                }}
+              >
+                Clear Video
+              </Button>
+            </InputGroup>
+          </Section>
+        </TabContent>
+        <TabContent $active={activeTab === "theme"}>
+          <GallerySection>
+            <SectionTitle>Custom Background Images</SectionTitle>
+            <ButtonGroup>
+              <UploadButton>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  style={{ display: "none" }}
+                  id="imageUpload"
+                />
+                <label htmlFor="imageUpload">Upload New Background</label>
+              </UploadButton>
+              <ClearButton onClick={clearBackground}>
+                Clear Background
+              </ClearButton>
+            </ButtonGroup>
+
+            {selectedImage && (
+              <SelectedImageActions>
+                <Button onClick={() => handleBackgroundSelect(selectedImage)}>
+                  Set as Background
                 </Button>
-              </ButtonGroup>
+                <DeleteButton onClick={() => handleImageDelete(selectedImage)}>
+                  Delete Image
+                </DeleteButton>
+              </SelectedImageActions>
+            )}
 
-              <MenuItemsGrid>
-                {menuItems.map((item) => (
-                  <MenuItemControl key={item.id}>
-                    <MenuItemImage src={item.imageUrl} alt={item.name} />
-                    <MenuItemActions>
-                      <Checkbox
-                        type="checkbox"
-                        checked={item.unavailable}
-                        onChange={() => toggleItemAvailability(item.id)}
-                      />
-                      <DeleteButton
-                        onClick={() => handleMenuItemDelete(item.id)}
-                      >
-                        ×
-                      </DeleteButton>
-                    </MenuItemActions>
-                  </MenuItemControl>
-                ))}
-              </MenuItemsGrid>
-            </MenuSection>
-          </TabContent>
+            <ImageGrid>
+              {images.map((image, index) => (
+                <ImageThumbnail
+                  key={index}
+                  onClick={() => setSelectedImage(image.url)}
+                  src={image.url}
+                  alt={`Background ${index + 1}`}
+                  $isSelected={selectedImage === image.url}
+                />
+              ))}
+            </ImageGrid>
+          </GallerySection>
+        </TabContent>
+        <TabContent $active={activeTab === "menu"}>
+          <MenuSection>
+            <SectionTitle>Menu Items</SectionTitle>
+            <ButtonGroup>
+              <UploadButton>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleMenuItemUpload}
+                  style={{ display: "none" }}
+                  id="menuItemUpload"
+                />
+                <label htmlFor="menuItemUpload">Add Menu Item</label>
+              </UploadButton>
+              <Button onClick={toggleMenuVisibility} $active={menuVisible}>
+                {menuVisible ? "Hide Menu" : "Show Menu"}
+              </Button>
+            </ButtonGroup>
+
+            <MenuItemsGrid>
+              {menuItems.map((item) => (
+                <MenuItemControl key={item.id}>
+                  <MenuItemImage src={item.imageUrl} alt={item.name} />
+                  <MenuItemActions>
+                    <Checkbox
+                      type="checkbox"
+                      checked={item.unavailable}
+                      onChange={() => toggleItemAvailability(item.id)}
+                    />
+                    <DeleteButton onClick={() => handleMenuItemDelete(item.id)}>
+                      ×
+                    </DeleteButton>
+                  </MenuItemActions>
+                </MenuItemControl>
+              ))}
+            </MenuItemsGrid>
+          </MenuSection>
+        </TabContent>
       </Container>
     </>
   );
@@ -770,7 +778,6 @@ const TabContainer = styled.div`
   gap: 10px;
   margin-bottom: 2rem;
   border-bottom: 1px solid #eee;
-  padding-bottom: 1rem;
   max-width: 1200px;
   margin-left: auto;
   margin-right: auto;
@@ -792,7 +799,7 @@ const Tab = styled.button`
 `;
 
 const TabContent = styled.div`
-  display: ${props => props.$active ? 'block' : 'none'};
+  display: ${(props) => (props.$active ? "block" : "none")};
   max-width: 1200px;
   margin-left: auto;
   margin-right: auto;
