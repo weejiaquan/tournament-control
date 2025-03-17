@@ -33,6 +33,21 @@ const ControlPanel = () => {
     danger: 'linear-gradient(45deg, #ff0000, #ff6666, #ff0000)'
   });
 
+  const [themes, setThemes] = useState([]);
+
+  useEffect(() => {
+    const fetchThemes = async () => {
+      try {
+        const response = await fetch(`${API_URL}/api/themes`);
+        const data = await response.json();
+        setThemes(data);
+      } catch (error) {
+        console.error('Failed to fetch themes:', error);
+      }
+    };
+
+    fetchThemes();
+  }, []);
 
   const [timerStyle, setTimerStyle] = useState(`
     color: linear-gradient(45deg, #ffdf00, #ffffff);
@@ -40,57 +55,11 @@ const ControlPanel = () => {
     text-shadow: 0 0 7px rgba(255,255,255,0.2), 0 0 10px rgba(255,255,255,0.2);
     top: 0;
     left: 1%;`);
-  
-    const [presetThemes] = useState([
-      {
-        name: 'Default',
-        backgroundUrl: '',
-        timerStyle: `
-          color: transparent;
-          font-size: 25rem;
-          font-family: 'DM Mono', sans-serif;
-          text-align: center;
-          letter-spacing: 2px;
-          line-height: 1.5;
-          padding: 20px;
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          text-shadow: 
-            0 0 7px rgba(255,255,255,0.2),
-            0 0 10px rgba(255,255,255,0.2),
-            0 0 21px rgba(255,255,255,0.2),
-            0 0 42px rgba(255,255,255,0.3),
-            0 0 82px rgba(255,255,255,0.1);`,
-        timerGradients: {
-          default: 'linear-gradient(45deg, #ffdf00, #ffffff)',
-          warning: 'linear-gradient(45deg, #ffffff, #ff7b00)',
-          danger: 'linear-gradient(45deg, #ff0000, #ff6666, #ff0000)'
-        }
-      },
-      {
-        name: 'Cyberpunk',
-        backgroundUrl: '/backgrounds/cyberpunk.jpg',
-        timerStyle: `
-          color: transparent;
-          font-size: 20rem;
-          font-family: 'DM Mono', sans-serif;
-          position: absolute;
-          bottom: 5%;
-          right: 5%;
-          text-shadow: 
-            0 0 10px #0ff,
-            0 0 20px #0ff,
-            0 0 30px #0ff,
-            0 0 40px #0ff;`,
-        timerGradients: {
-          default: 'linear-gradient(45deg, #00ffff, #ff00ff)',
-          warning: 'linear-gradient(45deg, #ff00ff, #ffff00)',
-          danger: 'linear-gradient(45deg, #ff0000, #ff00ff)'
-        }
-      }
-    ]);
+
+    const [expandedSections, setExpandedSections] = useState({
+      timerStyle: false,
+      timerGradients: false
+    });
 
   useEffect(() => {
     fetchImages();
@@ -435,6 +404,23 @@ const ControlPanel = () => {
       <GlobalStyle />
       <GlobalOverride />
       <Container>
+      <SceneSelector>
+            <SectionTitle>Scene Selection</SectionTitle>
+            <ButtonGroup>
+              <SceneButton
+                $active={currentScene === "landing"}
+                onClick={() => handleSceneChange("landing")}
+              >
+                Landing
+              </SceneButton>
+              <SceneButton
+                $active={currentScene === "timer"}
+                onClick={() => handleSceneChange("timer")}
+              >
+                Timer
+              </SceneButton>
+            </ButtonGroup>
+        </SceneSelector>
         <Title>Control Panel</Title>
 
         <TabContainer>
@@ -459,23 +445,6 @@ const ControlPanel = () => {
         </TabContainer>
 
         <TabContent $active={activeTab === "main"}>
-          <SceneSelector>
-            <SectionTitle>Scene Selection</SectionTitle>
-            <ButtonGroup>
-              <SceneButton
-                $active={currentScene === "landing"}
-                onClick={() => handleSceneChange("landing")}
-              >
-                Landing
-              </SceneButton>
-              <SceneButton
-                $active={currentScene === "timer"}
-                onClick={() => handleSceneChange("timer")}
-              >
-                Timer
-              </SceneButton>
-            </ButtonGroup>
-          </SceneSelector>
           <Form onSubmit={handleTimeSubmit}>
             <InputGroup>
               <SectionTitle>Timer Settings</SectionTitle>
@@ -570,7 +539,7 @@ const ControlPanel = () => {
           <GallerySection>
           <SectionTitle>Theme Presets</SectionTitle>
             <ThemePresetGrid>
-              {presetThemes.map((theme) => (
+              {themes.map((theme) => (
                 <ThemePresetButton
                     key={theme.name}
                     onClick={async () => {
@@ -586,17 +555,45 @@ const ControlPanel = () => {
                           await handleBackgroundSelect(theme.backgroundUrl);
                         }
                         
-
-                        
                         if (theme.timerStyle) {
                           await handleTimerStyleChange(theme.timerStyle);
                         }
 
                         if (theme.timerGradients) {
-                          // Update local state first
                           setTimerGradients(theme.timerGradients);
-                          // Then send to server
                           // await handleGradientSubmit();
+                        }
+
+                         // Apply landing text styles
+                        if (theme.landingText) {
+                          await fetch(`${API_URL}/api/landing/style`, {
+                            method: 'POST',
+                            headers: {
+                              'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(theme.landingText),
+                          });
+                        }
+
+                        if (theme.clockStyle) {
+                          await fetch(`${API_URL}/api/clock/style`, {
+                            method: 'POST',
+                            headers: {
+                              'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(theme.clockStyle),
+                          });
+                        }
+
+                              // Apply logo settings
+                        if (theme.logo) {
+                          await fetch(`${API_URL}/api/logo`, {
+                            method: 'POST',
+                            headers: {
+                              'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(theme.logo),
+                          });
                         }
                         
                       } catch (error) {
@@ -608,56 +605,71 @@ const ControlPanel = () => {
                   </ThemePresetButton>
               ))}
             </ThemePresetGrid>
-
             <SectionTitle>Timer Customization</SectionTitle>
             <CustomizationGroup>
-                <Label>Timer CSS</Label>
-                  <StyledTextArea
-                      value={timerStyle}
-                      onChange={(e) => setTimerStyle(e.target.value)}
-                      placeholder={`Enter raw CSS properties:
-              color: linear-gradient(45deg, #ffdf00, #ffffff);
-              font-size: 5rem;
-              text-shadow: 0 0 7px rgba(255,255,255,0.2);
-              top: 0;
-              left: 1%;`}
-                      rows={10}
-                  />
-                  <Button onClick={() => handleTimerStyleChange(timerStyle)}>
-                      Apply Changes
-                  </Button>
-              </CustomizationGroup>
-              <CustomizationGroup>
-                <Label>Timer Gradients</Label>
-                <InputGroup>
-                  <Label>Default Gradient</Label>
-                  <Input
-                    type="text"
-                    value={timerGradients.default}
-                    onChange={(e) => handleGradientChange('default', e.target.value)}
-                    placeholder="linear-gradient(45deg, #ffdf00, #ffffff)"
-                  />
-                </InputGroup>
-                <InputGroup>
-                  <Label>Warning Gradient (5 min)</Label>
-                  <Input
-                    type="text"
-                    value={timerGradients.warning}
-                    onChange={(e) => handleGradientChange('warning', e.target.value)}
-                    placeholder="linear-gradient(45deg, #ffffff, #ff7b00)"
-                  />
-                </InputGroup>
-                <InputGroup>
-                  <Label>Danger Gradient (0 sec)</Label>
-                  <Input
-                    type="text"
-                    value={timerGradients.danger}
-                    onChange={(e) => handleGradientChange('danger', e.target.value)}
-                    placeholder="linear-gradient(45deg, #ff0000, #ff6666, #ff0000)"
-                  />
-                </InputGroup>
-                <Button onClick={handleGradientSubmit}>Apply Gradients</Button>
-              </CustomizationGroup>
+                <CollapsibleHeader onClick={() => setExpandedSections(prev => ({
+                  ...prev,
+                  timerStyle: !prev.timerStyle
+                }))}>
+                    <Label>Timer CSS</Label>
+                    <ExpandIcon>{expandedSections.timerStyle ? '▼' : '▶'}</ExpandIcon>
+                </CollapsibleHeader>
+                <CollapsibleContent $isExpanded={expandedSections.timerStyle}>
+                    <StyledTextArea
+                        value={timerStyle}
+                        onChange={(e) => setTimerStyle(e.target.value)}
+                        placeholder={`Enter raw CSS properties:
+                    color: linear-gradient(45deg, #ffdf00, #ffffff);
+                    font-size: 5rem;
+                    text-shadow: 0 0 7px rgba(255,255,255,0.2);
+                    top: 0;
+                    left: 1%;`}
+                        rows={10}
+                    />
+                    <Button onClick={() => handleTimerStyleChange(timerStyle)}>
+                        Apply Changes
+                    </Button>
+                </CollapsibleContent>
+            </CustomizationGroup>
+            <CustomizationGroup>
+                <CollapsibleHeader onClick={() => setExpandedSections(prev => ({
+                  ...prev,
+                  timerGradients: !prev.timerGradients
+                }))}>
+                    <Label>Timer Gradients</Label>
+                    <ExpandIcon>{expandedSections.timerGradients ? '▼' : '▶'}</ExpandIcon>
+                </CollapsibleHeader>
+                <CollapsibleContent $isExpanded={expandedSections.timerGradients}>
+                    <InputGroup>
+                        <Label>Default Gradient</Label>
+                        <Input
+                            type="text"
+                            value={timerGradients.default}
+                            onChange={(e) => handleGradientChange('default', e.target.value)}
+                            placeholder="linear-gradient(45deg, #ffdf00, #ffffff)"
+                        />
+                    </InputGroup>
+                    <InputGroup>
+                        <Label>Warning Gradient (5 min)</Label>
+                        <Input
+                            type="text"
+                            value={timerGradients.warning}
+                            onChange={(e) => handleGradientChange('warning', e.target.value)}
+                            placeholder="linear-gradient(45deg, #ffffff, #ff7b00)"
+                        />
+                    </InputGroup>
+                    <InputGroup>
+                        <Label>Danger Gradient (0 sec)</Label>
+                        <Input
+                            type="text"
+                            value={timerGradients.danger}
+                            onChange={(e) => handleGradientChange('danger', e.target.value)}
+                            placeholder="linear-gradient(45deg, #ff0000, #ff6666, #ff0000)"
+                        />
+                    </InputGroup>
+                    <Button onClick={handleGradientSubmit}>Apply Gradients</Button>
+                </CollapsibleContent>
+            </CustomizationGroup>
             <Divider />
             <SectionTitle>Custom Background Images</SectionTitle>
             <ButtonGroup>
@@ -1091,6 +1103,31 @@ const StyledTextArea = styled.textarea`
     border-color: #007bff;
     box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
   }
+`;
+
+const CollapsibleHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  padding: 10px;
+  background: #2c3e50;
+  border-radius: 4px;
+  margin-bottom: 5px;
+  
+  &:hover {
+    background: #34495e;
+  }
+`;
+
+const ExpandIcon = styled.span`
+  font-size: 0.8rem;
+  color: white;
+`;
+
+const CollapsibleContent = styled.div`
+  display: ${props => props.$isExpanded ? 'block' : 'none'};
+  padding: 10px;
 `;
 
 export default ControlPanel;

@@ -6,6 +6,7 @@ import GlobalStyle from '../styles/GlobalStyle';
 import Clock from './Clock';
 import yonakaLogo from '../../assets/yonaka_logo.png'; // Add this import
 import MenuScreen from './MenuScreen';
+import Logo from './Logo';
 
 const gradient = keyframes`
   0% {
@@ -117,6 +118,7 @@ const App = () => {
 
     <Container $backgroundImage={backgroundImage}>
     <Clock />
+    <Logo />
     <Timer 
       $timeColor={getTimerColor(time)}
       $customStyle={timerStyle}
@@ -125,8 +127,8 @@ const App = () => {
     </Timer>
     <LogoContainer>
         <PoweredByText>Powered by</PoweredByText>
-        <Logo src={yonakaLogo} alt="Yonaka Logo" />
-      </LogoContainer>0
+        <YonakaLogo src={yonakaLogo} alt="Yonaka Logo" />
+      </LogoContainer>
     <MenuScreen />
     </Container>
 
@@ -171,9 +173,15 @@ const PoweredByText = styled.span`
   font-size: 2rem;
   font-family: 'DM Sans', sans-serif;
   opacity: 1;
+  text-shadow: 
+    0 0 7px rgba(0,0,0,0.2),
+    0 0 10px rgba(0,0,0,0.2),
+    0 0 21px rgba(0,0,0,0.2),
+    0 0 42px rgba(0,0,0,0.3),
+    0 0 82px rgba(0,0,0,0.1);
 `;
 
-const Logo = styled.img`
+const YonakaLogo = styled.img`
   height: 7vh; // Adjust this value based on your logo size
   width: 100%;
 `;

@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 import fs from 'fs';  // Add this import
 import { v4 as uuidv4 } from 'uuid';
 import morgan from 'morgan';
+import { themes } from './src/config/themes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -128,8 +129,11 @@ app.get('/api/images', (req, res) => {
     });
   });
 
+// Initialize states with default theme
+const defaultTheme = themes.default;
+
 let backgroundState = {
-    currentBackground: ''
+    currentBackground: defaultTheme.backgroundUrl
   };
 
 app.post('/api/background', (req, res) => {
@@ -259,13 +263,7 @@ app.get('/api/video', (req, res) => {
   res.json({ videoId: videoState.videoId });
 });
 
-let timerStyleState = {
-  color: 'linear-gradient(45deg, #ffdf00, #ffffff)',
-  fontSize: '5rem',
-  textShadow: '0 0 7px rgba(255,255,255,0.2), 0 0 10px rgba(255,255,255,0.2)',
-  top: '0',
-  left: '1%'
-};
+let timerStyleState = defaultTheme.timerStyle;
 
 app.post('/api/timer/style', (req, res) => {
   timerStyleState = { ...timerStyleState, ...req.body };
@@ -276,29 +274,92 @@ app.get('/api/timer/style', (req, res) => {
   res.json(timerStyleState);
 });
 
-let timerGradients = {
-  default: 'linear-gradient(45deg, #ffdf00, #ffffff)',
-  warning: 'linear-gradient(45deg, #ffffff, #ff7b00)',
-  danger: 'linear-gradient(45deg, #ff0000, #ff6666, #ff0000)'
-};
+let timerGradients = defaultTheme.timerGradients;
 
 app.get('/api/timer/gradients', (req, res) => {
-  console.log('Sending current gradients:', timerGradients);
+  // console.log('Sending current gradients:', timerGradients);
   res.json(timerGradients);
 });
 
 app.post('/api/timer/gradients', (req, res) => {
-  console.log('Received gradient update:', req.body);
+  // console.log('Received gradient update:', req.body);
   timerGradients = { ...timerGradients, ...req.body };
-  console.log('New gradients state:', timerGradients);
+  // console.log('New gradients state:', timerGradients);
   res.json(timerGradients);
 });
 
 app.post('/api/timer/style', (req, res) => {
-  console.log('Received style update:', req.body);
+  // console.log('Received style update:', req.body);
   timerStyleState = { ...timerStyleState, ...req.body };
-  console.log('New style state:', timerStyleState);
+  // console.log('New style state:', timerStyleState);
   res.json(timerStyleState);
+});
+
+let currentLandingStyles = defaultTheme.landingText;
+
+app.get('/api/landing/style', (req, res) => {
+  res.json(currentLandingStyles);
+});
+
+app.post('/api/landing/style', (req, res) => {
+  const { style, japaneseStyle } = req.body;
+  
+  if (style !== undefined) {
+    currentLandingStyles.style = style;
+  }
+  
+  if (japaneseStyle !== undefined) {
+    currentLandingStyles.japaneseStyle = japaneseStyle;
+  }
+  
+  res.json(currentLandingStyles);
+});
+
+// Store current clock styles in memory
+let currentClockStyle = defaultTheme.clockStyle;
+
+// GET endpoint to retrieve current clock styles
+app.get('/api/clock/style', (req, res) => {
+  res.json(currentClockStyle);
+});
+
+// POST endpoint to update clock styles
+app.post('/api/clock/style', (req, res) => {
+  const { style } = req.body;
+  
+  if (style !== undefined) {
+    currentClockStyle.style = style;
+  }
+  
+  res.json(currentClockStyle);
+});
+
+
+// Add this endpoint to get available themes
+app.get('/api/themes', (req, res) => {
+  res.json(Object.values(themes));
+});
+
+// Add with other state declarations
+let logoState = defaultTheme.logo;
+
+// Add new endpoints
+app.get('/api/logo', (req, res) => {
+  res.json(logoState);
+});
+
+app.post('/api/logo', (req, res) => {
+  const { url, style } = req.body;
+  
+  if (url !== undefined) {
+    logoState.url = url;
+  }
+  
+  if (style !== undefined) {
+    logoState.style = style;
+  }
+  
+  res.json(logoState);
 });
 
 // Add error logging middleware at the end
@@ -314,4 +375,10 @@ app.get('*', (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+
+  backgroundState.currentBackground = defaultTheme.backgroundUrl;
+  timerStyleState = defaultTheme.timerStyle;
+  timerGradients = defaultTheme.timerGradients;
+  currentLandingStyles = defaultTheme.landingText;
+  currentClockStyle = defaultTheme.clockStyle;
 });
