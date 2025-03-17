@@ -23,6 +23,12 @@ const App = () => {
   const [time, setTime] = useState(1800);
   const [isRunning, setIsRunning] = useState(false);
   const [backgroundImage, setBackgroundImage] = useState('');
+  const [timerStyle, setTimerStyle] = useState('');
+  const [timerGradients, setTimerGradients] = useState({
+    default: 'linear-gradient(45deg, #ffdf00, #ffffff)',
+    warning: 'linear-gradient(45deg, #ffffff, #ff7b00)',
+    danger: 'linear-gradient(45deg, #ff0000, #ff6666, #ff0000)'
+  });
 
   useEffect(() => {
     const fetchTimer = async () => {
@@ -56,6 +62,22 @@ const App = () => {
     return () => clearInterval(bgInterval);
   }, []);
 
+  useEffect(() => {
+    const fetchTimerStyle = async () => {
+      try {
+        const response = await fetch(`${API_URL}/api/timer/style`);
+        const data = await response.json();
+        setTimerStyle(data.style);
+      } catch (error) {
+        console.error('Failed to fetch timer style:', error);
+      }
+    };
+  
+    fetchTimerStyle();
+    const styleInterval = setInterval(fetchTimerStyle, 1000);
+    return () => clearInterval(styleInterval);
+  }, []);
+
   const formatTime = (seconds) => {
     const isNegative = seconds < 0;
     const absSeconds = Math.abs(seconds);
@@ -67,19 +89,38 @@ const App = () => {
 
   const getTimerColor = (seconds) => {
     if (seconds <= 0) {
-      return 'linear-gradient(45deg, #ff0000, #ff6666, #ff0000)';  // Bright red neon
+      return timerGradients.danger;
     }
     if (seconds <= 300) {
-      return 'linear-gradient(45deg, #ffffff, #ff7b00)';  // Bright yellow neon
+      return timerGradients.warning;
     }
-    return 'linear-gradient(45deg, #ffdf00, #ffffff)';  // Cyan neon
+    return timerGradients.default;
   };
+
+  useEffect(() => {
+    const fetchGradients = async () => {
+      try {
+        const response = await fetch(`${API_URL}/api/timer/gradients`);
+        const data = await response.json();
+        setTimerGradients(data);
+      } catch (error) {
+        console.error('Failed to fetch timer gradients:', error);
+      }
+    };
+  
+    fetchGradients();
+    const gradientInterval = setInterval(fetchGradients, 1000);
+    return () => clearInterval(gradientInterval);
+  }, []);
 
   return (
 
     <Container $backgroundImage={backgroundImage}>
     <Clock />
-    <Timer $timeColor={getTimerColor(time)}>
+    <Timer 
+      $timeColor={getTimerColor(time)}
+      $customStyle={timerStyle}
+    >
       {formatTime(time)}
     </Timer>
     <LogoContainer>
@@ -138,32 +179,37 @@ const Logo = styled.img`
 `;
 
 const Timer = styled.div`
-  color: transparent;
-  font-size: 25rem;
+  /* Base styles - always applied */
+  position: fixed;
   font-family: 'DM Mono', sans-serif;
-  
-  text-align: center;
-  letter-spacing: 2px;
-  line-height: 1.5;
-  padding: 20px;
-  border-radius: 10px;
-
-  text-shadow: 
-    0 0 7px rgba(255,255,255,0.2),
-    0 0 10px rgba(255,255,255,0.2),
-    0 0 21px rgba(255,255,255,0.2),
-    0 0 42px rgba(255,255,255,0.3),
-    0 0 82px rgba(255,255,255,0.1);
-
+  color: transparent;
   background: ${props => props.$timeColor};
   background-size: 300% 300%;
-  animation: ${gradient} 12s ease infinite;
   -webkit-background-clip: text;
   background-clip: text;
-
-  br {
-    margin: 10px 0;
-  }
+  animation: ${gradient} 12s ease infinite;
+  will-change: opacity, transform;
+  
+  /* Default styles - applied when no custom style is present */
+  ${props => !props.$customStyle && `
+    font-size: 25rem;
+    text-align: center;
+    letter-spacing: 2px;
+    line-height: 1.5;
+    padding: 20px;
+    text-shadow: 
+      0 0 7px rgba(255,255,255,0.2),
+      0 0 10px rgba(255,255,255,0.2),
+      0 0 21px rgba(255,255,255,0.2),
+      0 0 42px rgba(255,255,255,0.3),
+      0 0 82px rgba(255,255,255,0.1);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  `}
+  
+  /* Custom styles - overrides default styles when present */
+  ${props => props.$customStyle}
 `;
 
 export default App;

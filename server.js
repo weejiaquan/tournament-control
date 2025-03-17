@@ -5,6 +5,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';  // Add this import
 import { v4 as uuidv4 } from 'uuid';
+import morgan from 'morgan';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -34,7 +35,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const HOST = '0.0.0.0';  // Allow access from network
 
-
+app.use(morgan('dev')); // Logs requests like: GET /api/timer 200 2.711 ms
 app.use(cors());
 app.use(express.json());
 
@@ -256,6 +257,54 @@ app.post('/api/video', (req, res) => {
 
 app.get('/api/video', (req, res) => {
   res.json({ videoId: videoState.videoId });
+});
+
+let timerStyleState = {
+  color: 'linear-gradient(45deg, #ffdf00, #ffffff)',
+  fontSize: '5rem',
+  textShadow: '0 0 7px rgba(255,255,255,0.2), 0 0 10px rgba(255,255,255,0.2)',
+  top: '0',
+  left: '1%'
+};
+
+app.post('/api/timer/style', (req, res) => {
+  timerStyleState = { ...timerStyleState, ...req.body };
+  res.json(timerStyleState);
+});
+
+app.get('/api/timer/style', (req, res) => {
+  res.json(timerStyleState);
+});
+
+let timerGradients = {
+  default: 'linear-gradient(45deg, #ffdf00, #ffffff)',
+  warning: 'linear-gradient(45deg, #ffffff, #ff7b00)',
+  danger: 'linear-gradient(45deg, #ff0000, #ff6666, #ff0000)'
+};
+
+app.get('/api/timer/gradients', (req, res) => {
+  console.log('Sending current gradients:', timerGradients);
+  res.json(timerGradients);
+});
+
+app.post('/api/timer/gradients', (req, res) => {
+  console.log('Received gradient update:', req.body);
+  timerGradients = { ...timerGradients, ...req.body };
+  console.log('New gradients state:', timerGradients);
+  res.json(timerGradients);
+});
+
+app.post('/api/timer/style', (req, res) => {
+  console.log('Received style update:', req.body);
+  timerStyleState = { ...timerStyleState, ...req.body };
+  console.log('New style state:', timerStyleState);
+  res.json(timerStyleState);
+});
+
+// Add error logging middleware at the end
+app.use((err, req, res, next) => {
+  console.error('Error:', err.stack);
+  res.status(500).send('Something broke!');
 });
 
 app.use(express.static('dist'));

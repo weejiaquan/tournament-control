@@ -27,6 +27,71 @@ const ControlPanel = () => {
   const [activeTab, setActiveTab] = useState("main");
   const [videoUrl, setVideoUrl] = useState("");
 
+  const [timerGradients, setTimerGradients] = useState({
+    default: 'linear-gradient(45deg, #ffdf00, #ffffff)',
+    warning: 'linear-gradient(45deg, #ffffff, #ff7b00)',
+    danger: 'linear-gradient(45deg, #ff0000, #ff6666, #ff0000)'
+  });
+
+
+  const [timerStyle, setTimerStyle] = useState(`
+    color: linear-gradient(45deg, #ffdf00, #ffffff);
+    font-size: 5rem;
+    text-shadow: 0 0 7px rgba(255,255,255,0.2), 0 0 10px rgba(255,255,255,0.2);
+    top: 0;
+    left: 1%;`);
+  
+    const [presetThemes] = useState([
+      {
+        name: 'Default',
+        backgroundUrl: '',
+        timerStyle: `
+          color: transparent;
+          font-size: 25rem;
+          font-family: 'DM Mono', sans-serif;
+          text-align: center;
+          letter-spacing: 2px;
+          line-height: 1.5;
+          padding: 20px;
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          text-shadow: 
+            0 0 7px rgba(255,255,255,0.2),
+            0 0 10px rgba(255,255,255,0.2),
+            0 0 21px rgba(255,255,255,0.2),
+            0 0 42px rgba(255,255,255,0.3),
+            0 0 82px rgba(255,255,255,0.1);`,
+        timerGradients: {
+          default: 'linear-gradient(45deg, #ffdf00, #ffffff)',
+          warning: 'linear-gradient(45deg, #ffffff, #ff7b00)',
+          danger: 'linear-gradient(45deg, #ff0000, #ff6666, #ff0000)'
+        }
+      },
+      {
+        name: 'Cyberpunk',
+        backgroundUrl: '/backgrounds/cyberpunk.jpg',
+        timerStyle: `
+          color: transparent;
+          font-size: 20rem;
+          font-family: 'DM Mono', sans-serif;
+          position: absolute;
+          bottom: 5%;
+          right: 5%;
+          text-shadow: 
+            0 0 10px #0ff,
+            0 0 20px #0ff,
+            0 0 30px #0ff,
+            0 0 40px #0ff;`,
+        timerGradients: {
+          default: 'linear-gradient(45deg, #00ffff, #ff00ff)',
+          warning: 'linear-gradient(45deg, #ff00ff, #ffff00)',
+          danger: 'linear-gradient(45deg, #ff0000, #ff00ff)'
+        }
+      }
+    ]);
+
   useEffect(() => {
     fetchImages();
   }, []);
@@ -307,6 +372,64 @@ const ControlPanel = () => {
       console.error("Failed to toggle menu visibility:", error);
     }
   };
+
+  const handleTimerStyleChange = async (newStyle) => {
+    setTimerStyle(newStyle);
+    try {
+        await fetch(`${API_URL}/api/timer/style`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ style: newStyle }),
+        });
+    } catch (error) {
+        console.error('Failed to update timer style:', error);
+    }
+  };
+
+  const handleGradientChange = (type, value) => {
+    setTimerGradients(prev => ({
+      ...prev,
+      [type]: value
+    }));
+  };
+  
+  const handleGradientSubmit = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/timer/gradients`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(timerGradients),
+      });
+  
+      if (!response.ok) {
+        throw new Error('Failed to update gradients');
+      }
+  
+      return await response.json();
+    } catch (error) {
+      console.error('Failed to update gradients:', error);
+      throw error;
+    }
+  };
+  
+  // Add this useEffect to fetch initial gradients
+  useEffect(() => {
+    const fetchGradients = async () => {
+      try {
+        const response = await fetch(`${API_URL}/api/timer/gradients`);
+        const data = await response.json();
+        setTimerGradients(data);
+      } catch (error) {
+        console.error('Failed to fetch timer gradients:', error);
+      }
+    };
+  
+    fetchGradients();
+  }, []);
   return (
     <>
       <GlobalStyle />
@@ -445,6 +568,97 @@ const ControlPanel = () => {
         </TabContent>
         <TabContent $active={activeTab === "theme"}>
           <GallerySection>
+          <SectionTitle>Theme Presets</SectionTitle>
+            <ThemePresetGrid>
+              {presetThemes.map((theme) => (
+                <ThemePresetButton
+                    key={theme.name}
+                    onClick={async () => {
+                      try {
+                        // First clear everything
+                        await clearBackground();
+                        
+                        // Reset timer style to blank first
+                        await handleTimerStyleChange('');
+                        
+                        // Apply the new theme settings in sequence
+                        if (theme.backgroundUrl) {
+                          await handleBackgroundSelect(theme.backgroundUrl);
+                        }
+                        
+
+                        
+                        if (theme.timerStyle) {
+                          await handleTimerStyleChange(theme.timerStyle);
+                        }
+
+                        if (theme.timerGradients) {
+                          // Update local state first
+                          setTimerGradients(theme.timerGradients);
+                          // Then send to server
+                          // await handleGradientSubmit();
+                        }
+                        
+                      } catch (error) {
+                        console.error('Failed to apply theme:', error);
+                      }
+                    }}
+                  >
+                    {theme.name}
+                  </ThemePresetButton>
+              ))}
+            </ThemePresetGrid>
+
+            <SectionTitle>Timer Customization</SectionTitle>
+            <CustomizationGroup>
+                <Label>Timer CSS</Label>
+                  <StyledTextArea
+                      value={timerStyle}
+                      onChange={(e) => setTimerStyle(e.target.value)}
+                      placeholder={`Enter raw CSS properties:
+              color: linear-gradient(45deg, #ffdf00, #ffffff);
+              font-size: 5rem;
+              text-shadow: 0 0 7px rgba(255,255,255,0.2);
+              top: 0;
+              left: 1%;`}
+                      rows={10}
+                  />
+                  <Button onClick={() => handleTimerStyleChange(timerStyle)}>
+                      Apply Changes
+                  </Button>
+              </CustomizationGroup>
+              <CustomizationGroup>
+                <Label>Timer Gradients</Label>
+                <InputGroup>
+                  <Label>Default Gradient</Label>
+                  <Input
+                    type="text"
+                    value={timerGradients.default}
+                    onChange={(e) => handleGradientChange('default', e.target.value)}
+                    placeholder="linear-gradient(45deg, #ffdf00, #ffffff)"
+                  />
+                </InputGroup>
+                <InputGroup>
+                  <Label>Warning Gradient (5 min)</Label>
+                  <Input
+                    type="text"
+                    value={timerGradients.warning}
+                    onChange={(e) => handleGradientChange('warning', e.target.value)}
+                    placeholder="linear-gradient(45deg, #ffffff, #ff7b00)"
+                  />
+                </InputGroup>
+                <InputGroup>
+                  <Label>Danger Gradient (0 sec)</Label>
+                  <Input
+                    type="text"
+                    value={timerGradients.danger}
+                    onChange={(e) => handleGradientChange('danger', e.target.value)}
+                    placeholder="linear-gradient(45deg, #ff0000, #ff6666, #ff0000)"
+                  />
+                </InputGroup>
+                <Button onClick={handleGradientSubmit}>Apply Gradients</Button>
+              </CustomizationGroup>
+            <Divider />
             <SectionTitle>Custom Background Images</SectionTitle>
             <ButtonGroup>
               <UploadButton>
@@ -825,6 +1039,57 @@ const QuickTimerButton = styled.button`
 
   &:hover {
     background: #666;
+  }
+`;
+
+const ThemePresetGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1rem;
+  margin: 1rem 0;
+`;
+
+const ThemePresetButton = styled.button`
+  padding: 1rem;
+  background: #2c3e50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background: #34495e;
+    transform: translateY(-2px);
+  }
+`;
+
+const CustomizationGroup = styled(InputGroup)`
+  margin: 1rem 0;
+`;
+
+const Divider = styled.hr`
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin: 2rem 0;
+`;
+
+const StyledTextArea = styled.textarea`
+  padding: 10px;
+  font-size: 1rem;
+  font-family: 'Consolas', monospace;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: #2c2c2c;
+  color: #fff;
+  resize: vertical;
+  min-height: 150px;
+  width: 100%;
+  
+  &:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
   }
 `;
 
