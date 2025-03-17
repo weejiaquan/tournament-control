@@ -35,6 +35,9 @@ const ControlPanel = () => {
 
   const [themes, setThemes] = useState([]);
 
+  const [customText, setCustomText] = useState('Welcome to The Trading Gallery <br /> <span className="japanese">トレーディングギャラリーへようこそ</span>');
+  
+  const DEFAULT_TEXT = 'Welcome to The Trading Gallery <br /> <span className="japanese">トレーディングギャラリーへようこそ</span>';
   useEffect(() => {
     const fetchThemes = async () => {
       try {
@@ -445,6 +448,61 @@ const ControlPanel = () => {
         </TabContainer>
 
         <TabContent $active={activeTab === "main"}>
+        <Section>
+        <SectionTitle>Landing Text Customization</SectionTitle>
+            <InputGroup>
+              <StyledTextArea
+                value={customText}
+                onChange={(e) => setCustomText(e.target.value)}
+                placeholder={`Enter text with HTML tags. Example:
+                              Welcome to The Trading Gallery
+                              <br />
+                              <span className="japanese">トレーディングギャラリーへようこそ</span>`}
+                rows={6}
+              />
+              <small style={{ color: '#666', marginTop: '5px' }}>
+                Supported HTML tags: br, span, div. Use className="japanese" for Japanese text.
+              </small>
+              <ButtonGroup>
+              <Button
+                onClick={async () => {
+                  try {
+                    await fetch(`${API_URL}/api/landing/text`, {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify({ text: customText }),
+                    });
+                  } catch (error) {
+                    console.error('Failed to update text:', error);
+                  }
+                }}
+              >
+                Update Text
+              </Button>
+              <Button
+                onClick={async () => {
+                  setCustomText(DEFAULT_TEXT);
+                  try {
+                    await fetch(`${API_URL}/api/landing/text`, {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify({ text: DEFAULT_TEXT }),
+                    });
+                  } catch (error) {
+                    console.error('Failed to reset text:', error);
+                  }
+                }}
+                style={{ background: '#6c757d' }} // Gray color for reset button
+              >
+                Reset to Default
+              </Button>
+            </ButtonGroup>
+            </InputGroup>
+          </Section>
           <Form onSubmit={handleTimeSubmit}>
             <InputGroup>
               <SectionTitle>Timer Settings</SectionTitle>

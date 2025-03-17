@@ -49,6 +49,7 @@ export const themes = {
             background-size: 300% 300%;
             -webkit-background-clip: text;
             background-clip: text;
+            text-align: center;
           `,
           japaneseStyle: `
             font-family: 'Noto Sans JP', sans-serif;

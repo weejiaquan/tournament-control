@@ -368,6 +368,18 @@ app.use((err, req, res, next) => {
   res.status(500).send('Something broke!');
 });
 
+let customText = 'Welcome to The Trading Gallery <br /> <span className="japanese">トレーディングギャラリーへようこそ</span>';
+
+app.post('/api/landing/text', (req, res) => {
+  const { text } = req.body;
+  customText = text;
+  res.json({ success: true });
+});
+
+app.get('/api/landing/text', (req, res) => {
+  res.json({ text: customText });
+});
+
 app.use(express.static('dist'));
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));

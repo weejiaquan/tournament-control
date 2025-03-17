@@ -30,7 +30,35 @@ const LandingScreen = () => {
     style: '',
     japaneseStyle: ''
   });
+
+  const [customText, setCustomText] = useState('Welcome to The Trading Gallery <br /> <span className="japanese">トレーディングギャラリーへようこそ</span>');
+  const [isTextFading, setIsTextFading] = useState(false);
+  const [pendingText, setPendingText] = useState('');
   
+  useEffect(() => {
+    const fetchCustomText = async () => {
+      try {
+        const response = await fetch(`${API_URL}/api/landing/text`);
+        const data = await response.json();
+        
+        if (data.text !== customText) {
+          setIsTextFading(true);
+          setPendingText(data.text);
+          
+          setTimeout(() => {
+            setCustomText(data.text);
+            setIsTextFading(false);
+          }, 500); // Match this with CSS transition duration
+        }
+      } catch (error) {
+        console.error('Failed to fetch custom text:', error);
+      }
+    };
+  
+    fetchCustomText();
+    const textInterval = setInterval(fetchCustomText, 1000);
+    return () => clearInterval(textInterval);
+  }, [customText]); // Add customText as dependency
 
   useEffect(() => {
     const fetchLandingStyles = async () => {
@@ -140,11 +168,9 @@ const LandingScreen = () => {
       $hasVideo={!!videoId}
       $customStyle={landingTextStyles.style}
       $customJapaneseStyle={landingTextStyles.japaneseStyle}
-    >
-      Welcome to The Trading Gallery 
-      <br />
-      <span className="japanese">トレーディングギャラリーへようこそ</span>
-    </DefaultText>
+      $isTextFading={isTextFading}
+      dangerouslySetInnerHTML={{ __html: customText }}
+    />
         {videoId && <YouTubeEmbed videoId={videoId} />}
         </ContentWrapper>
       <MenuScreen />
@@ -204,6 +230,13 @@ const DefaultText = styled.h1`
     -webkit-background-clip: text;
     background-clip: text;
   `}
+
+    opacity: ${props => {
+    if (props.$isTextFading) return 0;
+    return props.$hasVideo ? 0 : 1;
+    }};
+    transition: all 0.5s ease-in-out;
+    visibility: ${props => props.$isTextFading ? 'visible' : 'visible'};
 
   .japanese {
     ${props => props.$customJapaneseStyle || ''}
