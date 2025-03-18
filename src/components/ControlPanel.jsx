@@ -36,7 +36,11 @@ const ControlPanel = () => {
   const [themes, setThemes] = useState([]);
 
   const [customText, setCustomText] = useState('Welcome to The Trading Gallery <br /> <span className="japanese">トレーディングギャラリーへようこそ</span>');
-  
+
+
+  const [lastWinner, setLastWinner] = useState(null);
+  const [isSpinning, setIsSpinning] = useState(false);
+
   const DEFAULT_TEXT = 'Welcome to The Trading Gallery <br /> <span className="japanese">トレーディングギャラリーへようこそ</span>';
   useEffect(() => {
     const fetchThemes = async () => {
@@ -59,85 +63,88 @@ const ControlPanel = () => {
     top: 0;
     left: 1%;`);
 
-    const [expandedSections, setExpandedSections] = useState({
-      timerStyle: false,
-      timerGradients: false
-    });
-  
-    const [inputType, setInputType] = useState('text');
-    const [csvInput, setCsvInput] = useState('');
-    const [participants, setParticipants] = useState([]);
-    const [newParticipant, setNewParticipant] = useState('');
+  const [expandedSections, setExpandedSections] = useState({
+    timerStyle: false,
+    timerGradients: false
+  });
 
-    const addParticipant = () => {
-      if (newParticipant.trim()) {
-        setParticipants([...participants, { name: newParticipant.trim() }]);
-        setNewParticipant('');
-        saveParticipantsToApi([...participants, { name: newParticipant.trim() }]);
+  const [inputType, setInputType] = useState('text');
+  const [csvInput, setCsvInput] = useState('');
+  const [participants, setParticipants] = useState([]);
+  const [newParticipant, setNewParticipant] = useState('');
+
+  const addParticipant = () => {
+    if (newParticipant.trim()) {
+      const updatedParticipants = [...participants, { name: newParticipant.trim() }];
+      setParticipants(updatedParticipants);
+      setNewParticipant('');
+      saveParticipantsToApi(updatedParticipants);
+    }
+  };
+
+  const importCsv = () => {
+    const names = csvInput
+      .split('\n')
+      .map(name => name.trim())
+      .filter(name => name.length > 0)
+      .map(name => ({ name }));
+
+    setParticipants([...participants, ...names]);
+    setCsvInput('');
+    saveParticipantsToApi([...participants, ...names]);
+  };
+
+  const removeParticipant = (index) => {
+    const newParticipants = participants.filter((_, i) => i !== index);
+    setParticipants(newParticipants);
+    saveParticipantsToApi(newParticipants);
+  };
+
+  const clearParticipants = () => {
+    if (window.confirm('Are you sure you want to clear all participants?')) {
+      setParticipants([]);
+      saveParticipantsToApi([]);
+    }
+  };
+
+  const saveParticipantsToApi = async (participantsList) => {
+    try {
+      console.log('Saving participants:', participantsList); // Debug log
+      const response = await fetch(`${API_URL}/api/raffle/participants`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ participants: participantsList }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-    };
-    
-    const importCsv = () => {
-      const names = csvInput
-        .split('\n')
-        .map(name => name.trim())
-        .filter(name => name.length > 0)
-        .map(name => ({ name }));
-      
-      setParticipants([...participants, ...names]);
-      setCsvInput('');
-      saveParticipantsToApi([...participants, ...names]);
-    };
-    
-    const removeParticipant = (index) => {
-      const newParticipants = participants.filter((_, i) => i !== index);
-      setParticipants(newParticipants);
-      saveParticipantsToApi(newParticipants);
-    };
-    
-    const clearParticipants = () => {
-      if (window.confirm('Are you sure you want to clear all participants?')) {
-        setParticipants([]);
-        saveParticipantsToApi([]);
+
+      const data = await response.json();
+      console.log('Save response:', data); // Debug log
+    } catch (error) {
+      console.error('Failed to save participants:', error);
+    }
+  };
+
+  // Add this useEffect to load participants on component mount
+  useEffect(() => {
+    const fetchParticipants = async () => {
+      try {
+        const response = await fetch(`${API_URL}/api/raffle/participants`);
+        const data = await response.json();
+        // Ensure we're setting an array of participants
+        setParticipants(Array.isArray(data.participants) ? data.participants : []);
+      } catch (error) {
+        console.error('Failed to fetch participants:', error);
+        setParticipants([]); // Set empty array on error
       }
     };
 
-    const saveParticipants = () => {
-      try {
-        saveParticipantsToApi(participants);
-      } catch (error) {
-        console.error('Failed to save participants:', error);
-      }
-    };
-    
-    const saveParticipantsToApi = async (participantsList) => {
-      try {
-        await fetch(`${API_URL}/api/raffle/participants`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ participants: participantsList }),
-        });
-      } catch (error) {
-        console.error('Failed to save participants:', error);
-      }
-    };
-    
-    // Add this useEffect to load participants on component mount
-    useEffect(() => {
-      const fetchParticipants = async () => {
-        try {
-          const response = await fetch(`${API_URL}/api/raffle/participants`);
-          const data = await response.json();
-          setParticipants(data.participants);
-        } catch (error) {
-          console.error('Failed to fetch participants:', error);
-        }
-      };
-    
-      fetchParticipants();
-    }, []);
+    fetchParticipants();
+  }, []);
 
   useEffect(() => {
     fetchImages();
@@ -423,15 +430,15 @@ const ControlPanel = () => {
   const handleTimerStyleChange = async (newStyle) => {
     setTimerStyle(newStyle);
     try {
-        await fetch(`${API_URL}/api/timer/style`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ style: newStyle }),
-        });
+      await fetch(`${API_URL}/api/timer/style`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ style: newStyle }),
+      });
     } catch (error) {
-        console.error('Failed to update timer style:', error);
+      console.error('Failed to update timer style:', error);
     }
   };
 
@@ -441,7 +448,7 @@ const ControlPanel = () => {
       [type]: value
     }));
   };
-  
+
   const handleGradientSubmit = async () => {
     try {
       const response = await fetch(`${API_URL}/api/timer/gradients`, {
@@ -451,18 +458,18 @@ const ControlPanel = () => {
         },
         body: JSON.stringify(timerGradients),
       });
-  
+
       if (!response.ok) {
         throw new Error('Failed to update gradients');
       }
-  
+
       return await response.json();
     } catch (error) {
       console.error('Failed to update gradients:', error);
       throw error;
     }
   };
-  
+
   // Add this useEffect to fetch initial gradients
   useEffect(() => {
     const fetchGradients = async () => {
@@ -474,36 +481,37 @@ const ControlPanel = () => {
         console.error('Failed to fetch timer gradients:', error);
       }
     };
-  
+
     fetchGradients();
   }, []);
+
   return (
     <>
       <GlobalStyle />
       <GlobalOverride />
       <Container>
-      <SceneSelector>
-            <SectionTitle>Scene Selection</SectionTitle>
-            <ButtonGroup>
-              <SceneButton
-                $active={currentScene === "landing"}
-                onClick={() => handleSceneChange("landing")}
-              >
-                Landing
-              </SceneButton>
-              <SceneButton
-                $active={currentScene === "timer"}
-                onClick={() => handleSceneChange("timer")}
-              >
-                Timer
-              </SceneButton>
-              <SceneButton
-                $active={currentScene === "raffle"}
-                onClick={() => handleSceneChange("raffle")}
-              >
-                Raffle
-              </SceneButton>
-            </ButtonGroup>
+        <SceneSelector>
+          <SectionTitle>Scene Selection</SectionTitle>
+          <ButtonGroup>
+            <SceneButton
+              $active={currentScene === "landing"}
+              onClick={() => handleSceneChange("landing")}
+            >
+              Landing
+            </SceneButton>
+            <SceneButton
+              $active={currentScene === "timer"}
+              onClick={() => handleSceneChange("timer")}
+            >
+              Timer
+            </SceneButton>
+            <SceneButton
+              $active={currentScene === "raffle"}
+              onClick={() => handleSceneChange("raffle")}
+            >
+              Raffle
+            </SceneButton>
+          </ButtonGroup>
         </SceneSelector>
         <Title>Control Panel</Title>
 
@@ -515,8 +523,8 @@ const ControlPanel = () => {
         </TabContainer>
 
         <TabContent $active={activeTab === "main"}>
-        <Section>
-        <SectionTitle>Landing Text Customization</SectionTitle>
+          <Section>
+            <SectionTitle>Landing Text Customization</SectionTitle>
             <InputGroup>
               <StyledTextArea
                 value={customText}
@@ -531,43 +539,43 @@ const ControlPanel = () => {
                 Supported HTML tags: br, span, div. Use className="japanese" for Japanese text.
               </small>
               <ButtonGroup>
-              <Button
-                onClick={async () => {
-                  try {
-                    await fetch(`${API_URL}/api/landing/text`, {
-                      method: 'POST',
-                      headers: {
-                        'Content-Type': 'application/json',
-                      },
-                      body: JSON.stringify({ text: customText }),
-                    });
-                  } catch (error) {
-                    console.error('Failed to update text:', error);
-                  }
-                }}
-              >
-                Update Text
-              </Button>
-              <Button
-                onClick={async () => {
-                  setCustomText(DEFAULT_TEXT);
-                  try {
-                    await fetch(`${API_URL}/api/landing/text`, {
-                      method: 'POST',
-                      headers: {
-                        'Content-Type': 'application/json',
-                      },
-                      body: JSON.stringify({ text: DEFAULT_TEXT }),
-                    });
-                  } catch (error) {
-                    console.error('Failed to reset text:', error);
-                  }
-                }}
-                style={{ background: '#6c757d' }} // Gray color for reset button
-              >
-                Reset to Default
-              </Button>
-            </ButtonGroup>
+                <Button
+                  onClick={async () => {
+                    try {
+                      await fetch(`${API_URL}/api/landing/text`, {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ text: customText }),
+                      });
+                    } catch (error) {
+                      console.error('Failed to update text:', error);
+                    }
+                  }}
+                >
+                  Update Text
+                </Button>
+                <Button
+                  onClick={async () => {
+                    setCustomText(DEFAULT_TEXT);
+                    try {
+                      await fetch(`${API_URL}/api/landing/text`, {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ text: DEFAULT_TEXT }),
+                      });
+                    } catch (error) {
+                      console.error('Failed to reset text:', error);
+                    }
+                  }}
+                  style={{ background: '#6c757d' }} // Gray color for reset button
+                >
+                  Reset to Default
+                </Button>
+              </ButtonGroup>
             </InputGroup>
           </Section>
           <Form onSubmit={handleTimeSubmit}>
@@ -662,138 +670,138 @@ const ControlPanel = () => {
         </TabContent>
         <TabContent $active={activeTab === "theme"}>
           <GallerySection>
-          <SectionTitle>Theme Presets</SectionTitle>
+            <SectionTitle>Theme Presets</SectionTitle>
             <ThemePresetGrid>
               {themes.map((theme) => (
                 <ThemePresetButton
-                    key={theme.name}
-                    onClick={async () => {
-                      try {
-                        // First clear everything
-                        await clearBackground();
-                        
-                        // Reset timer style to blank first
-                        await handleTimerStyleChange('');
-                        
-                        // Apply the new theme settings in sequence
-                        if (theme.backgroundUrl) {
-                          await handleBackgroundSelect(theme.backgroundUrl);
-                        }
-                        
-                        if (theme.timerStyle) {
-                          await handleTimerStyleChange(theme.timerStyle);
-                        }
+                  key={theme.name}
+                  onClick={async () => {
+                    try {
+                      // First clear everything
+                      await clearBackground();
 
-                        if (theme.timerGradients) {
-                          setTimerGradients(theme.timerGradients);
-                          // await handleGradientSubmit();
-                        }
+                      // Reset timer style to blank first
+                      await handleTimerStyleChange('');
 
-                         // Apply landing text styles
-                        if (theme.landingText) {
-                          await fetch(`${API_URL}/api/landing/style`, {
-                            method: 'POST',
-                            headers: {
-                              'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify(theme.landingText),
-                          });
-                        }
-
-                        if (theme.clockStyle) {
-                          await fetch(`${API_URL}/api/clock/style`, {
-                            method: 'POST',
-                            headers: {
-                              'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify(theme.clockStyle),
-                          });
-                        }
-
-                              // Apply logo settings
-                        if (theme.logo) {
-                          await fetch(`${API_URL}/api/logo`, {
-                            method: 'POST',
-                            headers: {
-                              'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify(theme.logo),
-                          });
-                        }
-                        
-                      } catch (error) {
-                        console.error('Failed to apply theme:', error);
+                      // Apply the new theme settings in sequence
+                      if (theme.backgroundUrl) {
+                        await handleBackgroundSelect(theme.backgroundUrl);
                       }
-                    }}
-                  >
-                    {theme.name}
-                  </ThemePresetButton>
+
+                      if (theme.timerStyle) {
+                        await handleTimerStyleChange(theme.timerStyle);
+                      }
+
+                      if (theme.timerGradients) {
+                        setTimerGradients(theme.timerGradients);
+                        // await handleGradientSubmit();
+                      }
+
+                      // Apply landing text styles
+                      if (theme.landingText) {
+                        await fetch(`${API_URL}/api/landing/style`, {
+                          method: 'POST',
+                          headers: {
+                            'Content-Type': 'application/json',
+                          },
+                          body: JSON.stringify(theme.landingText),
+                        });
+                      }
+
+                      if (theme.clockStyle) {
+                        await fetch(`${API_URL}/api/clock/style`, {
+                          method: 'POST',
+                          headers: {
+                            'Content-Type': 'application/json',
+                          },
+                          body: JSON.stringify(theme.clockStyle),
+                        });
+                      }
+
+                      // Apply logo settings
+                      if (theme.logo) {
+                        await fetch(`${API_URL}/api/logo`, {
+                          method: 'POST',
+                          headers: {
+                            'Content-Type': 'application/json',
+                          },
+                          body: JSON.stringify(theme.logo),
+                        });
+                      }
+
+                    } catch (error) {
+                      console.error('Failed to apply theme:', error);
+                    }
+                  }}
+                >
+                  {theme.name}
+                </ThemePresetButton>
               ))}
             </ThemePresetGrid>
             <SectionTitle>Timer Customization</SectionTitle>
             <CustomizationGroup>
-                <CollapsibleHeader onClick={() => setExpandedSections(prev => ({
-                  ...prev,
-                  timerStyle: !prev.timerStyle
-                }))}>
-                    <Label>Timer CSS</Label>
-                    <ExpandIcon>{expandedSections.timerStyle ? '▼' : '▶'}</ExpandIcon>
-                </CollapsibleHeader>
-                <CollapsibleContent $isExpanded={expandedSections.timerStyle}>
-                    <StyledTextArea
-                        value={timerStyle}
-                        onChange={(e) => setTimerStyle(e.target.value)}
-                        placeholder={`Enter raw CSS properties:
+              <CollapsibleHeader onClick={() => setExpandedSections(prev => ({
+                ...prev,
+                timerStyle: !prev.timerStyle
+              }))}>
+                <Label>Timer CSS</Label>
+                <ExpandIcon>{expandedSections.timerStyle ? '▼' : '▶'}</ExpandIcon>
+              </CollapsibleHeader>
+              <CollapsibleContent $isExpanded={expandedSections.timerStyle}>
+                <StyledTextArea
+                  value={timerStyle}
+                  onChange={(e) => setTimerStyle(e.target.value)}
+                  placeholder={`Enter raw CSS properties:
                     color: linear-gradient(45deg, #ffdf00, #ffffff);
                     font-size: 5rem;
                     text-shadow: 0 0 7px rgba(255,255,255,0.2);
                     top: 0;
                     left: 1%;`}
-                        rows={10}
-                    />
-                    <Button onClick={() => handleTimerStyleChange(timerStyle)}>
-                        Apply Changes
-                    </Button>
-                </CollapsibleContent>
+                  rows={10}
+                />
+                <Button onClick={() => handleTimerStyleChange(timerStyle)}>
+                  Apply Changes
+                </Button>
+              </CollapsibleContent>
             </CustomizationGroup>
             <CustomizationGroup>
-                <CollapsibleHeader onClick={() => setExpandedSections(prev => ({
-                  ...prev,
-                  timerGradients: !prev.timerGradients
-                }))}>
-                    <Label>Timer Gradients</Label>
-                    <ExpandIcon>{expandedSections.timerGradients ? '▼' : '▶'}</ExpandIcon>
-                </CollapsibleHeader>
-                <CollapsibleContent $isExpanded={expandedSections.timerGradients}>
-                    <InputGroup>
-                        <Label>Default Gradient</Label>
-                        <Input
-                            type="text"
-                            value={timerGradients.default}
-                            onChange={(e) => handleGradientChange('default', e.target.value)}
-                            placeholder="linear-gradient(45deg, #ffdf00, #ffffff)"
-                        />
-                    </InputGroup>
-                    <InputGroup>
-                        <Label>Warning Gradient (5 min)</Label>
-                        <Input
-                            type="text"
-                            value={timerGradients.warning}
-                            onChange={(e) => handleGradientChange('warning', e.target.value)}
-                            placeholder="linear-gradient(45deg, #ffffff, #ff7b00)"
-                        />
-                    </InputGroup>
-                    <InputGroup>
-                        <Label>Danger Gradient (0 sec)</Label>
-                        <Input
-                            type="text"
-                            value={timerGradients.danger}
-                            onChange={(e) => handleGradientChange('danger', e.target.value)}
-                            placeholder="linear-gradient(45deg, #ff0000, #ff6666, #ff0000)"
-                        />
-                    </InputGroup>
-                    <Button onClick={handleGradientSubmit}>Apply Gradients</Button>
-                </CollapsibleContent>
+              <CollapsibleHeader onClick={() => setExpandedSections(prev => ({
+                ...prev,
+                timerGradients: !prev.timerGradients
+              }))}>
+                <Label>Timer Gradients</Label>
+                <ExpandIcon>{expandedSections.timerGradients ? '▼' : '▶'}</ExpandIcon>
+              </CollapsibleHeader>
+              <CollapsibleContent $isExpanded={expandedSections.timerGradients}>
+                <InputGroup>
+                  <Label>Default Gradient</Label>
+                  <Input
+                    type="text"
+                    value={timerGradients.default}
+                    onChange={(e) => handleGradientChange('default', e.target.value)}
+                    placeholder="linear-gradient(45deg, #ffdf00, #ffffff)"
+                  />
+                </InputGroup>
+                <InputGroup>
+                  <Label>Warning Gradient (5 min)</Label>
+                  <Input
+                    type="text"
+                    value={timerGradients.warning}
+                    onChange={(e) => handleGradientChange('warning', e.target.value)}
+                    placeholder="linear-gradient(45deg, #ffffff, #ff7b00)"
+                  />
+                </InputGroup>
+                <InputGroup>
+                  <Label>Danger Gradient (0 sec)</Label>
+                  <Input
+                    type="text"
+                    value={timerGradients.danger}
+                    onChange={(e) => handleGradientChange('danger', e.target.value)}
+                    placeholder="linear-gradient(45deg, #ff0000, #ff6666, #ff0000)"
+                  />
+                </InputGroup>
+                <Button onClick={handleGradientSubmit}>Apply Gradients</Button>
+              </CollapsibleContent>
             </CustomizationGroup>
             <Divider />
             <SectionTitle>Custom Background Images</SectionTitle>
@@ -876,65 +884,106 @@ const ControlPanel = () => {
           </MenuSection>
         </TabContent>
         <TabContent $active={activeTab === "raffle"}>
-        <RaffleSection>
-          <SectionTitle>Raffle Participants</SectionTitle>
-          <InputTypeToggle>
-            <ToggleButton 
-              $active={inputType === 'text'} 
-              onClick={() => setInputType('text')}
-            >
-              Text Input
-            </ToggleButton>
-            <ToggleButton 
-              $active={inputType === 'csv'} 
-              onClick={() => setInputType('csv')}
-            >
-              CSV Import
-            </ToggleButton>
-          </InputTypeToggle>
+          <RaffleSection>
+            <SectionTitle>Raffle Participants</SectionTitle>
+            <InputTypeToggle>
+              <ToggleButton
+                $active={inputType === 'text'}
+                onClick={() => setInputType('text')}
+              >
+                Text Input
+              </ToggleButton>
+              <ToggleButton
+                $active={inputType === 'csv'}
+                onClick={() => setInputType('csv')}
+              >
+                CSV Import
+              </ToggleButton>
+            </InputTypeToggle>
 
-          {inputType === 'text' ? (
-            <InputGroup>
-              <Input
-                type="text"
-                value={newParticipant}
-                onChange={(e) => setNewParticipant(e.target.value)}
-                placeholder="Enter participant name"
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter') {
-                    addParticipant();
+            {inputType === 'text' ? (
+              <InputGroup>
+                <Input
+                  type="text"
+                  value={newParticipant}
+                  onChange={(e) => setNewParticipant(e.target.value)}
+                  placeholder="Enter participant name"
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      addParticipant();
+                    }
+                  }}
+                />
+                <Button onClick={addParticipant}>Add Participant</Button>
+              </InputGroup>
+            ) : (
+              <InputGroup>
+                <StyledTextArea
+                  value={csvInput}
+                  onChange={(e) => setCsvInput(e.target.value)}
+                  placeholder="Paste CSV content here (one name per line)"
+                  rows={10}
+                />
+                <Button onClick={importCsv}>Import CSV</Button>
+              </InputGroup>
+            )}
+
+            <ParticipantList>
+              {Array.isArray(participants) && participants.length > 0 ? (
+                participants.map((participant, index) => (
+                  <ParticipantItem key={index}>
+                    {participant?.name || 'Unknown'}
+                    <DeleteButton onClick={() => removeParticipant(index)}>×</DeleteButton>
+                  </ParticipantItem>
+                ))
+              ) : (
+                <div style={{ textAlign: 'center', padding: '1rem', color: '#666' }}>
+                  No participants added yet
+                </div>
+              )}
+            </ParticipantList>
+
+            <Divider />
+            <SectionTitle>Raffle Controls</SectionTitle>
+            <ButtonGroup>
+              <Button
+                onClick={async () => {
+                  if (!participants.length || isSpinning) return;
+                  setIsSpinning(true);
+                  try {
+                    // Let the server decide the winner
+                    const response = await fetch(`${API_URL}/api/raffle/spin`, {
+                      method: 'POST'
+                    });
+                    const data = await response.json();
+
+                    // Use the winner from the server response
+                    setTimeout(() => {
+                      setLastWinner(data.winner);
+                      setIsSpinning(false);
+                    }, 4000);
+                  } catch (error) {
+                    console.error('Failed to spin raffle:', error);
+                    setIsSpinning(false);
                   }
                 }}
-              />
-              <Button onClick={addParticipant}>Add Participant</Button>
-            </InputGroup>
-          ) : (
-            <InputGroup>
-              <StyledTextArea
-                value={csvInput}
-                onChange={(e) => setCsvInput(e.target.value)}
-                placeholder="Paste CSV content here (one name per line)"
-                rows={10}
-              />
-              <Button onClick={importCsv}>Import CSV</Button>
-            </InputGroup>
-          )}
+                disabled={isSpinning || !participants.length}
+              >
+                {isSpinning ? 'Spinning...' : 'Spin Raffle'}
+              </Button>
+            </ButtonGroup>
 
-          <ParticipantList>
-            {participants.map((participant, index) => (
-              <ParticipantItem key={index}>
-                {participant.name}
-                <DeleteButton onClick={() => removeParticipant(index)}>×</DeleteButton>
-              </ParticipantItem>
-            ))}
-          </ParticipantList>
+            {lastWinner && (
+              <StatusText>
+                Last Winner: {lastWinner}
+              </StatusText>
+            )}
 
-          <ButtonGroup>
-            <Button onClick={saveParticipants}>Save Participants</Button>
-            <Button onClick={clearParticipants}>Clear All</Button>
-          </ButtonGroup>
-        </RaffleSection>
-      </TabContent>
+            <ButtonGroup>
+              <Button onClick={clearParticipants}>Clear All</Button>
+            </ButtonGroup>
+          </RaffleSection>
+        </TabContent>
       </Container>
     </>
   );

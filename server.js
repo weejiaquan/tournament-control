@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 import fs from 'fs';  // Add this import
 import { v4 as uuidv4 } from 'uuid';
 import morgan from 'morgan';
+import Database from 'better-sqlite3';
 import { themes } from './src/config/themes.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -19,17 +20,17 @@ if (!fs.existsSync(bgUploadsDir)) {
 
 // Configure multer for image uploads
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-      // Store background images in uploads/bgimg
-      cb(null, bgUploadsDir);
-    },
-    filename: (req, file, cb) => {
-      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-      cb(null, uniqueSuffix + path.extname(file.originalname));
-    }
-  });
-  
-  
+  destination: (req, file, cb) => {
+    // Store background images in uploads/bgimg
+    cb(null, bgUploadsDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+
 const upload = multer({ storage });
 
 const app = express();
@@ -51,17 +52,17 @@ let timerInterval;
 
 // Timer control functions
 const startTimer = () => {
-    if (!timerInterval) {
-        timerInterval = setInterval(() => {
-          // Allow timer to go negative
-          timerState.time -= 1;
-          
-          // Optional: Stop at a certain negative limit
-          // if (timerState.time < -300) { // Stop at -5 minutes
-          //   stopTimer();
-          //   timerState.isRunning = false;
-          // }
-        }, 1000);
+  if (!timerInterval) {
+    timerInterval = setInterval(() => {
+      // Allow timer to go negative
+      timerState.time -= 1;
+
+      // Optional: Stop at a certain negative limit
+      // if (timerState.time < -300) { // Stop at -5 minutes
+      //   stopTimer();
+      //   timerState.isRunning = false;
+      // }
+    }, 1000);
   }
 };
 
@@ -72,21 +73,115 @@ const stopTimer = () => {
   }
 };
 
+//DB//
+const db = new Database('raffle.db');
+// Initialize the participants table
+db.exec(`
+  CREATE TABLE IF NOT EXISTS participants (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  )
+`);
+
+let raffleState = {
+  participants: [],
+  winner: null
+};
+
+let clients = new Set();
+
+
+// Raffle API endpoints
+app.get('/api/raffle/participants', (req, res) => {
+  try {
+    const participants = db.prepare('SELECT * FROM participants').all();
+    res.json(participants);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/raffle/participants', (req, res) => {
+  try {
+    const { participants } = req.body;
+    const insertStmt = db.prepare('INSERT INTO participants (name) VALUES (?)');
+    const clearStmt = db.prepare('DELETE FROM participants');
+
+    db.transaction(() => {
+      clearStmt.run();
+      participants.forEach(participant => {
+        insertStmt.run(participant.name);
+      });
+    })();
+
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/api/raffle/participants', (req, res) => {
+  try {
+    db.prepare('DELETE FROM participants').run();
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
+app.get('/api/raffle/spin-updates', (req, res) => {
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+
+  // Add this client to our set of clients
+  clients.add(res);
+
+  // Remove client on connection close
+  req.on('close', () => clients.delete(res));
+});
+
+app.post('/api/raffle/spin', (req, res) => {
+  try {
+    // Generate random winner index if not provided
+    const participants = db.prepare('SELECT * FROM participants').all();
+    const winnerIndex = Math.floor(Math.random() * participants.length);
+    const winner = participants[winnerIndex];
+
+    // Notify all connected clients
+    const eventData = JSON.stringify({
+      action: 'spin',
+      winnerIndex,
+      winner: winner.name
+    });
+
+    clients.forEach(client => {
+      client.write(`data: ${eventData}\n\n`);
+    });
+
+    res.json({ success: true, winner: winner.name, winnerIndex });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.get('/api/timer', (req, res) => {
   res.json(timerState);
 });
 
 app.delete('/api/images/:filename', (req, res) => {
-    const filename = req.params.filename;
-    const filepath = path.join(bgUploadsDir, filename);
-    
-    fs.unlink(filepath, (err) => {
-      if (err) {
-        return res.status(500).json({ error: 'Failed to delete image' });
-      }
-      res.json({ success: true });
-    });
+  const filename = req.params.filename;
+  const filepath = path.join(bgUploadsDir, filename);
+
+  fs.unlink(filepath, (err) => {
+    if (err) {
+      return res.status(500).json({ error: 'Failed to delete image' });
+    }
+    res.json({ success: true });
   });
+});
 
 app.post('/api/timer/set', (req, res) => {
   const { time } = req.body;
@@ -116,36 +211,36 @@ app.post('/api/upload', upload.single('image'), (req, res) => {
 });
 
 app.get('/api/images', (req, res) => {
-    fs.readdir(bgUploadsDir, (err, files) => {
-      if (err) {
-        return res.status(500).json({ error: 'Failed to read uploads directory' });
-      }
-      const images = files
-        .filter(file => /\.(jpg|jpeg|png|gif)$/i.test(file))
-        .map(file => ({
-          url: `/uploads/bgimg/${file}`
-        }));
-      res.json(images);
-    });
+  fs.readdir(bgUploadsDir, (err, files) => {
+    if (err) {
+      return res.status(500).json({ error: 'Failed to read uploads directory' });
+    }
+    const images = files
+      .filter(file => /\.(jpg|jpeg|png|gif)$/i.test(file))
+      .map(file => ({
+        url: `/uploads/bgimg/${file}`
+      }));
+    res.json(images);
   });
+});
 
 // Initialize states with default theme
 const defaultTheme = themes.default;
 
 let backgroundState = {
-    currentBackground: defaultTheme.backgroundUrl
-  };
+  currentBackground: defaultTheme.backgroundUrl
+};
 
 app.post('/api/background', (req, res) => {
-    const { backgroundImage } = req.body;
-    backgroundState.currentBackground = backgroundImage;
-    res.json({ success: true });
-  });
-  
+  const { backgroundImage } = req.body;
+  backgroundState.currentBackground = backgroundImage;
+  res.json({ success: true });
+});
+
 app.get('/api/background', (req, res) => {
   res.json({ backgroundImage: backgroundState.currentBackground });
 });
-  
+
 let sceneState = {
   currentScene: 'landing' // or 'timer'
 };
@@ -303,15 +398,15 @@ app.get('/api/landing/style', (req, res) => {
 
 app.post('/api/landing/style', (req, res) => {
   const { style, japaneseStyle } = req.body;
-  
+
   if (style !== undefined) {
     currentLandingStyles.style = style;
   }
-  
+
   if (japaneseStyle !== undefined) {
     currentLandingStyles.japaneseStyle = japaneseStyle;
   }
-  
+
   res.json(currentLandingStyles);
 });
 
@@ -326,11 +421,11 @@ app.get('/api/clock/style', (req, res) => {
 // POST endpoint to update clock styles
 app.post('/api/clock/style', (req, res) => {
   const { style } = req.body;
-  
+
   if (style !== undefined) {
     currentClockStyle.style = style;
   }
-  
+
   res.json(currentClockStyle);
 });
 
@@ -350,15 +445,15 @@ app.get('/api/logo', (req, res) => {
 
 app.post('/api/logo', (req, res) => {
   const { url, style } = req.body;
-  
+
   if (url !== undefined) {
     logoState.url = url;
   }
-  
+
   if (style !== undefined) {
     logoState.style = style;
   }
-  
+
   res.json(logoState);
 });
 
