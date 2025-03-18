@@ -27,3 +27,5 @@ Thumbs.db
 *.sln
 
 ignore
+
+*.db
