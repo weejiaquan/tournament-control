@@ -2,6 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Wheel } from 'react-custom-roulette';
 import styled from 'styled-components';
 import { API_URL } from '../config';
+import { themes } from '../config/themes';
+
+
+const currentTheme = themes.default;
 
 const RaffleScreen = () => {
     const [mustSpin, setMustSpin] = useState(false);
@@ -83,7 +87,7 @@ const RaffleScreen = () => {
     }));
 
     return (
-        <RaffleContainer>
+        <RaffleContainer theme={currentTheme.raffleStyle}>
             {wheelData.length > 0 ? (
                 <>
                     <WheelContainer>
@@ -98,21 +102,24 @@ const RaffleScreen = () => {
                                 }
                             }}
                             backgroundColors={wheelData.map(d => d.style.backgroundColor)}
-                            textColors={wheelData.map(() => '#ffffff')}
-                            fontSize={32}
-                            spinDuration={0.8}
-                            outerBorderWidth={2}
-                            radiusLineWidth={1}
+                            textColors={[currentTheme.raffleStyle.wheel.textColors]}
+                            fontSize={currentTheme.raffleStyle.wheel.fontSize}
+                            spinDuration={currentTheme.raffleStyle.wheel.spinDuration}
+                            outerBorderWidth={currentTheme.raffleStyle.wheel.outerBorderWidth}
+                            outerBorderColor={currentTheme.raffleStyle.wheel.outerBorderColor}
+                            innerBorderColor={currentTheme.raffleStyle.wheel.innerBorderColor}
+                            radiusLineColor={currentTheme.raffleStyle.wheel.radiusLineColor}
+                            radiusLineWidth={currentTheme.raffleStyle.wheel.radiusLineWidth}
                         />
                     </WheelContainer>
                     {winner && (
-                        <WinnerAnnouncement>
+                        <WinnerAnnouncement theme={currentTheme.raffleStyle}>
                             Congratulations to {winner}!
                         </WinnerAnnouncement>
                     )}
                 </>
             ) : (
-                <NoParticipantsMessage>
+                <NoParticipantsMessage theme={currentTheme.raffleStyle}>
                     Waiting for participants...
                 </NoParticipantsMessage>
             )}
@@ -121,13 +128,11 @@ const RaffleScreen = () => {
 };
 
 const RaffleContainer = styled.div`
+    ${props => props.theme.container}
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 100vh;
-    background-color: #1a1a1a;
-    padding: 2rem;
 `;
 
 const WheelContainer = styled.div`
@@ -137,23 +142,11 @@ const WheelContainer = styled.div`
 `;
 
 const WinnerAnnouncement = styled.h1`
-    color: #fff;
-    font-size: 2.5rem;
-    margin-top: 2rem;
-    text-align: center;
-    animation: fadeIn 1s ease-in;
-
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
+    ${props => props.theme.winner}
 `;
 
 const NoParticipantsMessage = styled.div`
-    color: #fff;
-    font-size: 1.5rem;
-    text-align: center;
-    opacity: 0.7;
+    ${props => props.theme.waitingMessage}
 `;
 
 export default RaffleScreen;

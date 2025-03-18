@@ -72,7 +72,47 @@ export const themes = {
             -webkit-background-clip: text;
             background-clip: text;
           `
-        }
+        },
+        raffleStyle: {
+          container: `
+              background-image: url('/assets/timer/ttg_main.png');
+              min-height: 100vh;
+              padding: 2rem;
+          `,
+          wheel: {
+              fontSize: 32,
+              outerBorderColor: '#fff',
+              outerBorderWidth: 3,
+              innerBorderColor: 'rgba(255, 255, 255, 0.3)',
+              radiusLineColor: 'rgba(255, 255, 255, 0.2)',
+              radiusLineWidth: 2,
+              textColors: ['#ffffff'],
+              spinDuration: 0.8
+          },
+          winner: `
+              color: transparent;
+              font-size: 4rem;
+              font-family: 'DM Sans', sans-serif;
+              text-align: center;
+              margin-top: 2rem;
+              background: linear-gradient(300deg, #ffdf00, #ffffff);
+              background-size: 300% 300%;
+              -webkit-background-clip: text;
+              background-clip: text;
+              animation: fadeIn 1s ease-in;
+
+              @keyframes fadeIn {
+                  from { opacity: 0; transform: translateY(20px); }
+                  to { opacity: 1; transform: translateY(0); }
+              }
+          `,
+          waitingMessage: `
+              color: rgba(255, 255, 255, 0.7);
+              font-size: 2rem;
+              font-family: 'DM Sans', sans-serif;
+              text-align: center;
+          `
+      }
       },
         cyberpunk:
       {
