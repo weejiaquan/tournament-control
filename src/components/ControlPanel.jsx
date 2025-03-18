@@ -63,6 +63,81 @@ const ControlPanel = () => {
       timerStyle: false,
       timerGradients: false
     });
+  
+    const [inputType, setInputType] = useState('text');
+    const [csvInput, setCsvInput] = useState('');
+    const [participants, setParticipants] = useState([]);
+    const [newParticipant, setNewParticipant] = useState('');
+
+    const addParticipant = () => {
+      if (newParticipant.trim()) {
+        setParticipants([...participants, { name: newParticipant.trim() }]);
+        setNewParticipant('');
+        saveParticipantsToApi([...participants, { name: newParticipant.trim() }]);
+      }
+    };
+    
+    const importCsv = () => {
+      const names = csvInput
+        .split('\n')
+        .map(name => name.trim())
+        .filter(name => name.length > 0)
+        .map(name => ({ name }));
+      
+      setParticipants([...participants, ...names]);
+      setCsvInput('');
+      saveParticipantsToApi([...participants, ...names]);
+    };
+    
+    const removeParticipant = (index) => {
+      const newParticipants = participants.filter((_, i) => i !== index);
+      setParticipants(newParticipants);
+      saveParticipantsToApi(newParticipants);
+    };
+    
+    const clearParticipants = () => {
+      if (window.confirm('Are you sure you want to clear all participants?')) {
+        setParticipants([]);
+        saveParticipantsToApi([]);
+      }
+    };
+
+    const saveParticipants = () => {
+      try {
+        saveParticipantsToApi(participants);
+      } catch (error) {
+        console.error('Failed to save participants:', error);
+      }
+    };
+    
+    const saveParticipantsToApi = async (participantsList) => {
+      try {
+        await fetch(`${API_URL}/api/raffle/participants`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ participants: participantsList }),
+        });
+      } catch (error) {
+        console.error('Failed to save participants:', error);
+      }
+    };
+    
+    // Add this useEffect to load participants on component mount
+    useEffect(() => {
+      const fetchParticipants = async () => {
+        try {
+          const response = await fetch(`${API_URL}/api/raffle/participants`);
+          const data = await response.json();
+          setParticipants(data.participants);
+        } catch (error) {
+          console.error('Failed to fetch participants:', error);
+        }
+      };
+    
+      fetchParticipants();
+    }, []);
 
   useEffect(() => {
     fetchImages();
@@ -422,29 +497,21 @@ const ControlPanel = () => {
               >
                 Timer
               </SceneButton>
+              <SceneButton
+                $active={currentScene === "raffle"}
+                onClick={() => handleSceneChange("raffle")}
+              >
+                Raffle
+              </SceneButton>
             </ButtonGroup>
         </SceneSelector>
         <Title>Control Panel</Title>
 
         <TabContainer>
-          <Tab
-            $active={activeTab === "main"}
-            onClick={() => setActiveTab("main")}
-          >
-            Main
-          </Tab>
-          <Tab
-            $active={activeTab === "theme"}
-            onClick={() => setActiveTab("theme")}
-          >
-            Theme
-          </Tab>
-          <Tab
-            $active={activeTab === "menu"}
-            onClick={() => setActiveTab("menu")}
-          >
-            Menu
-          </Tab>
+          <Tab $active={activeTab === "main"} onClick={() => setActiveTab("main")}>Main</Tab>
+          <Tab $active={activeTab === "theme"} onClick={() => setActiveTab("theme")}>Theme</Tab>
+          <Tab $active={activeTab === "menu"} onClick={() => setActiveTab("menu")}>Menu</Tab>
+          <Tab $active={activeTab === "raffle"} onClick={() => setActiveTab("raffle")}>Raffle</Tab>
         </TabContainer>
 
         <TabContent $active={activeTab === "main"}>
@@ -808,6 +875,66 @@ const ControlPanel = () => {
             </MenuItemsGrid>
           </MenuSection>
         </TabContent>
+        <TabContent $active={activeTab === "raffle"}>
+        <RaffleSection>
+          <SectionTitle>Raffle Participants</SectionTitle>
+          <InputTypeToggle>
+            <ToggleButton 
+              $active={inputType === 'text'} 
+              onClick={() => setInputType('text')}
+            >
+              Text Input
+            </ToggleButton>
+            <ToggleButton 
+              $active={inputType === 'csv'} 
+              onClick={() => setInputType('csv')}
+            >
+              CSV Import
+            </ToggleButton>
+          </InputTypeToggle>
+
+          {inputType === 'text' ? (
+            <InputGroup>
+              <Input
+                type="text"
+                value={newParticipant}
+                onChange={(e) => setNewParticipant(e.target.value)}
+                placeholder="Enter participant name"
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    addParticipant();
+                  }
+                }}
+              />
+              <Button onClick={addParticipant}>Add Participant</Button>
+            </InputGroup>
+          ) : (
+            <InputGroup>
+              <StyledTextArea
+                value={csvInput}
+                onChange={(e) => setCsvInput(e.target.value)}
+                placeholder="Paste CSV content here (one name per line)"
+                rows={10}
+              />
+              <Button onClick={importCsv}>Import CSV</Button>
+            </InputGroup>
+          )}
+
+          <ParticipantList>
+            {participants.map((participant, index) => (
+              <ParticipantItem key={index}>
+                {participant.name}
+                <DeleteButton onClick={() => removeParticipant(index)}>×</DeleteButton>
+              </ParticipantItem>
+            ))}
+          </ParticipantList>
+
+          <ButtonGroup>
+            <Button onClick={saveParticipants}>Save Participants</Button>
+            <Button onClick={clearParticipants}>Clear All</Button>
+          </ButtonGroup>
+        </RaffleSection>
+      </TabContent>
       </Container>
     </>
   );
@@ -1188,4 +1315,51 @@ const CollapsibleContent = styled.div`
   padding: 10px;
 `;
 
+const RaffleSection = styled(Section)`
+  max-width: 800px;
+  margin: 0 auto;
+`;
+
+const InputTypeToggle = styled.div`
+  display: flex;
+  gap: 10px;
+  margin-bottom: 1rem;
+`;
+
+const ToggleButton = styled.button`
+  padding: 8px 16px;
+  background: ${props => props.$active ? '#007bff' : '#6c757d'};
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background: ${props => props.$active ? '#0056b3' : '#5a6268'};
+  }
+`;
+
+const ParticipantList = styled.div`
+  margin: 1rem 0;
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid #444;
+  border-radius: 4px;
+  padding: 0.5rem;
+`;
+
+const ParticipantItem = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem;
+  background: #2c3e50;
+  margin: 0.25rem 0;
+  border-radius: 4px;
+
+  &:hover {
+    background: #34495e;
+  }
+`;
 export default ControlPanel;

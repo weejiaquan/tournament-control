@@ -5,6 +5,7 @@ import LandingScreen from './LandingScreen';
 import TimerScreen from './TimerScreen';
 import ControlPanel from './ControlPanel';
 import SceneManager from './SceneManager';
+import RaffleScreen from './RaffleScreen'; 
 
 const App = () => {
   return (
@@ -14,6 +15,7 @@ const App = () => {
         <Route path="/landing" element={<LandingScreen />} />
         <Route path="/timer" element={<TimerScreen />} />
         <Route path="/control" element={<ControlPanel />} />
+        <Route path="/raffle" element={<RaffleScreen />} />
       </Routes>
     </AppContainer>
   );
