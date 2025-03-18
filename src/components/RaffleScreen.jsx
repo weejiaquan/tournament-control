@@ -42,11 +42,11 @@ const RaffleScreen = () => {
             try {
                 const response = await fetch(`${API_URL}/api/raffle/participants`);
                 const data = await response.json();
-                
+
                 // Handle both data formats: {participants: [...]} or direct array
                 const participantList = data.participants || data;
                 const newParticipants = Array.isArray(participantList) ? participantList : [];
-                
+
                 // Only update state if participants have changed
                 setParticipants(prevParticipants => {
                     if (!areParticipantsEqual(prevParticipants, newParticipants)) {
@@ -65,7 +65,7 @@ const RaffleScreen = () => {
                 setWinner(null); // Also reset winner on error
             }
         };
-    
+
         fetchParticipants();
         const interval = setInterval(fetchParticipants, 5000);
         return () => clearInterval(interval);
@@ -78,7 +78,7 @@ const RaffleScreen = () => {
             backgroundColor: generateColor(),
             textColor: 'white',
             // fontSize: '16px',
-            fontFamily: 'Arial'
+            fontFamily: 'DM Sans'
         }
     }));
 
@@ -104,7 +104,6 @@ const RaffleScreen = () => {
                             outerBorderWidth={2}
                             radiusLineWidth={1}
                         />
-                        <PointerTriangle />
                     </WheelContainer>
                     {winner && (
                         <WinnerAnnouncement>
@@ -135,19 +134,6 @@ const WheelContainer = styled.div`
     max-width: 80vh;
     max-height: 80vh;
     aspect-ratio: 1;
-`;
-
-const PointerTriangle = styled.div`
-  width: 0;
-  height: 0;
-  border-left: 20px solid transparent;
-  border-right: 20px solid transparent;
-  border-top: 40px solid #fff;
-  position: absolute;
-  top: -20px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 2;
 `;
 
 const WinnerAnnouncement = styled.h1`
