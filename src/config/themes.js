@@ -59,8 +59,8 @@ export const themes = {
         clockStyle: {
           style: `
             position: fixed;
-            top: 0;
-            right: 1%;
+            top: 5%;
+            right: 3%;
             color: transparent;
             font-size: 5rem;
             font-family: 'DM Mono', sans-serif;
