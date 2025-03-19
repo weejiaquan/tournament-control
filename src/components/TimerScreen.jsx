@@ -26,7 +26,7 @@ const App = () => {
   const [backgroundImage, setBackgroundImage] = useState('');
   const [timerStyle, setTimerStyle] = useState('');
   const [timerGradients, setTimerGradients] = useState({
-    default: 'linear-gradient(45deg, #ffdf00, #ffffff)',
+    default: 'linear-gradient(45deg, #ffffff, #ffffff)',
     warning: 'linear-gradient(45deg, #ffffff, #ff7b00)',
     danger: 'linear-gradient(45deg, #ff0000, #ff6666, #ff0000)'
   });

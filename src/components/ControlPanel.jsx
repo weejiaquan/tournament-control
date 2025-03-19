@@ -28,7 +28,7 @@ const ControlPanel = () => {
   const [videoUrl, setVideoUrl] = useState("");
 
   const [timerGradients, setTimerGradients] = useState({
-    default: 'linear-gradient(45deg, #ffdf00, #ffffff)',
+    default: 'linear-gradient(45deg, #ffffff, #ffffff)',
     warning: 'linear-gradient(45deg, #ffffff, #ff7b00)',
     danger: 'linear-gradient(45deg, #ff0000, #ff6666, #ff0000)'
   });
@@ -57,7 +57,7 @@ const ControlPanel = () => {
   }, []);
 
   const [timerStyle, setTimerStyle] = useState(`
-    color: linear-gradient(45deg, #ffdf00, #ffffff);
+    color: linear-gradient(45deg, #ffffff, #ffffff);
     font-size: 5rem;
     text-shadow: 0 0 7px rgba(255,255,255,0.2), 0 0 10px rgba(255,255,255,0.2);
     top: 0;
@@ -752,7 +752,7 @@ const ControlPanel = () => {
                   value={timerStyle}
                   onChange={(e) => setTimerStyle(e.target.value)}
                   placeholder={`Enter raw CSS properties:
-                    color: linear-gradient(45deg, #ffdf00, #ffffff);
+                    color: linear-gradient(45deg, #ffffff, #ffffff);
                     font-size: 5rem;
                     text-shadow: 0 0 7px rgba(255,255,255,0.2);
                     top: 0;
@@ -779,7 +779,7 @@ const ControlPanel = () => {
                     type="text"
                     value={timerGradients.default}
                     onChange={(e) => handleGradientChange('default', e.target.value)}
-                    placeholder="linear-gradient(45deg, #ffdf00, #ffffff)"
+                    placeholder="linear-gradient(45deg, #ffffff, #ffffff)"
                   />
                 </InputGroup>
                 <InputGroup>

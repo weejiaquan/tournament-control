@@ -18,7 +18,7 @@ const Timer = ({ time, className }) => {
         if (seconds <= 300) {
           return 'linear-gradient(45deg, #ffffff, #ff7b00)';  // Bright yellow neon
         }
-        return 'linear-gradient(45deg, #ffdf00, #ffffff)';  // Default color
+        return 'linear-gradient(45deg, #ffffff, #ffffff)';  // Default color
       };
 
   return (
