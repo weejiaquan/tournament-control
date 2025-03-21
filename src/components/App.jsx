@@ -7,6 +7,7 @@ import ControlPanel from './display/ControlPanel';
 import SceneManager from './display/SceneManager';
 import RaffleScreen from './display/RaffleScreen';
 import TabletLanding from './tablet/TabletLanding'; // Break out TabletLanding for direct import
+import Login from './tablet/Login';
 
 const App = () => {
   return (
@@ -21,6 +22,7 @@ const App = () => {
 
         {/* Tablet Routes */}
         <Route path="/tablet" element={<TabletLanding />} />
+        <Route path="/login" element={<Login />} />
       </Routes>
     </AppContainer>
   );
