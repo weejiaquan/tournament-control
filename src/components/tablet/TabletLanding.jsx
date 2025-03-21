@@ -29,7 +29,7 @@ const TabletLanding = () => {
     const getLoginUrl = (position) => {
       // This URL will point to your login page
       const baseUrl = window.location.origin;
-      return `${baseUrl}/login?tabletid=${tabletId}&position=${position}`;
+      return `${baseUrl}/tablet/login?tabletid=${tabletId}&position=${position}`;
     };
   
     const renderPanels = () => {
@@ -47,21 +47,13 @@ const TabletLanding = () => {
             ) : (
               <div className="login-container">
                 <p>Scan to login</p>
+                <span>{getLoginUrl(position)}</span>
                 <QRCodeSVG value={getLoginUrl(position)} size={200} />
               </div>
             )}
           </div>
         );
       });
-    };
-  
-    // WebSocket or polling could be implemented here to receive login updates
-    // For now, we'll create a test function to simulate login
-    const simulateLogin = (position, name) => {
-      setPlayerNames(prev => ({
-        ...prev,
-        [position]: name
-      }));
     };
   
     return (

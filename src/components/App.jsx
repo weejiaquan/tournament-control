@@ -22,7 +22,7 @@ const App = () => {
 
         {/* Tablet Routes */}
         <Route path="/tablet" element={<TabletLanding />} />
-        <Route path="/login" element={<Login />} />
+        <Route path="/tablet/login" element={<Login />} />
       </Routes>
     </AppContainer>
   );

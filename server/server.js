@@ -3,6 +3,8 @@ import cors from 'cors';
 import morgan from 'morgan';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
 
 import timerRoutes from './routes/timerRoutes.js';
 import raffleRoutes from './routes/raffleRoutes.js';
@@ -14,6 +16,7 @@ import logoRoutes from './routes/logoRoutes.js';
 import clockRoutes from './routes/clockRoutes.js';
 import landingRoutes from './routes/landingRoutes.js';
 import themeRoutes from './routes/themeRoutes.js';
+import { setupTabletWebSocket } from './websocket/tabletHandler.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -21,6 +24,17 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 const HOST = '0.0.0.0';
+
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+  cors: {
+    origin: "http://localhost:5173", // Vite default port
+    methods: ["GET", "POST"]
+  }
+});
+
+// WebSockets
+setupTabletWebSocket(io);
 
 // Middleware
 app.use(morgan('dev'));
@@ -51,6 +65,6 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../dist/index.html'));
 });
 
-app.listen(PORT, HOST, () => {
+httpServer.listen(PORT, HOST, () => {
   console.log(`Server running on port ${PORT}`);
 });
