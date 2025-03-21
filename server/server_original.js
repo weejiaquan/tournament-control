@@ -7,7 +7,7 @@ import fs from 'fs';  // Add this import
 import { v4 as uuidv4 } from 'uuid';
 import morgan from 'morgan';
 import Database from 'better-sqlite3';
-import { themes } from './src/config/themes.js';
+import { themes } from '../src/config/display/themes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

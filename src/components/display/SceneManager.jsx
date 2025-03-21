@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
-import { API_URL } from '../config';
 import LandingScreen from './LandingScreen';
 import TimerScreen from './TimerScreen';
 import RaffleScreen from './RaffleScreen';
-import GlobalStyle from '../styles/GlobalStyle';
+import GlobalStyle from '../../styles/GlobalStyle';
+
+import { API_URL } from '../../config/display/';
 
 const SceneManager = () => {
   const [currentScene, setCurrentScene] = useState('landing');

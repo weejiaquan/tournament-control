@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { API_URL } from '../config';
-import GlobalStyle from '../styles/GlobalStyle';
+import { API_URL } from '../../config/display/';
+import GlobalStyle from '../../styles/GlobalStyle';
 import styled, { keyframes, css } from 'styled-components';
 import Clock from './Clock';
 import MenuScreen from './MenuScreen';

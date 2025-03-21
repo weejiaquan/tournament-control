@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
-import { API_URL } from "../config";
-import GlobalStyle from "../styles/GlobalStyle";
+import { API_URL } from '../../config/display/';
+import GlobalStyle from '../../styles/GlobalStyle';
 
 const GlobalOverride = styled.div`
   html, body, #root {
@@ -42,17 +42,21 @@ const ControlPanel = () => {
   const [isSpinning, setIsSpinning] = useState(false);
 
   const DEFAULT_TEXT = 'Welcome to The Trading Gallery <br /> <span className="japanese">トレーディングギャラリーへようこそ</span>';
+ 
   useEffect(() => {
     const fetchThemes = async () => {
       try {
         const response = await fetch(`${API_URL}/api/themes`);
+        if (!response.ok) throw new Error('Failed to fetch themes');
         const data = await response.json();
-        setThemes(data);
+        // Ensure data is an array
+        setThemes(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error('Failed to fetch themes:', error);
+        setThemes([]); // Set empty array on error
       }
     };
-
+  
     fetchThemes();
   }, []);
 
@@ -163,7 +167,7 @@ const ControlPanel = () => {
     setUploading(true);
 
     try {
-      await fetch(`${API_URL}/api/upload`, {
+      await fetch(`${API_URL}/api/background/upload`, {
         method: "POST",
         body: formData,
       });

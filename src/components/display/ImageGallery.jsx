@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { API_URL } from '../config';
+import { API_URL } from '../../config/display/';
 
 const ImageGallery = ({ onSelectImage }) => {
   const [images, setImages] = useState([]);

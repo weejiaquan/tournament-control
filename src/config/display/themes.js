@@ -1,7 +1,7 @@
 export const themes = {
   default: {
     name: 'Default',
-    backgroundUrl: '/assets/timer/ttg_main.png',
+    backgroundUrl: '../assets/timer/ttg_main.png',
     timerStyle: `
           color: transparent;
           font-size: 25rem;
@@ -116,7 +116,7 @@ export const themes = {
   cyberpunk:
   {
     name: 'Yonaka',
-    backgroundUrl: '/assets/timer/yonaka_main.png',
+    backgroundUrl: '../assets/timer/yonaka_main.png',
     timerStyle: `
           color: transparent;
           font-size: 20rem;

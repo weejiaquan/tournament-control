@@ -1,21 +1,26 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import styled from 'styled-components';
-import LandingScreen from './LandingScreen';
-import TimerScreen from './TimerScreen';
-import ControlPanel from './ControlPanel';
-import SceneManager from './SceneManager';
-import RaffleScreen from './RaffleScreen'; 
+import LandingScreen from './display/LandingScreen';
+import TimerScreen from './display/TimerScreen';
+import ControlPanel from './display/ControlPanel';
+import SceneManager from './display/SceneManager';
+import RaffleScreen from './display/RaffleScreen';
+import TabletLanding from './tablet/TabletLanding'; // Break out TabletLanding for direct import
 
 const App = () => {
   return (
     <AppContainer>
       <Routes>
+        {/* Display Routes */}
         <Route path="/" element={<SceneManager />} />
         <Route path="/landing" element={<LandingScreen />} />
         <Route path="/timer" element={<TimerScreen />} />
         <Route path="/control" element={<ControlPanel />} />
         <Route path="/raffle" element={<RaffleScreen />} />
+
+        {/* Tablet Routes */}
+        <Route path="/tablet" element={<TabletLanding />} />
       </Routes>
     </AppContainer>
   );

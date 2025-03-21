@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { API_URL } from '../config';
+import { API_URL } from '../../config/display/';
 import { keyframes } from 'styled-components';
-import GlobalStyle from '../styles/GlobalStyle';
+import GlobalStyle from '../../styles/GlobalStyle';
 import Clock from './Clock';
-import yonakaLogo from '../../assets/yonaka_logo.png'; // Add this import
+import yonakaLogo from '../../../assets/yonaka_logo.png'; // Add this import
 import MenuScreen from './MenuScreen';
 import Logo from './Logo';
 

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Wheel } from 'react-custom-roulette';
 import styled from 'styled-components';
-import { API_URL } from '../config';
-import { themes } from '../config/themes';
+import { API_URL } from '../../config/display/';
+import { themes } from '../../config/display/themes';
 
 
 const currentTheme = themes.default;
