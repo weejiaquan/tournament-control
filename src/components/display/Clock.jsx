@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
-import { API_URL } from '../../config/display/';
+import { API_URL } from '../../config';
 
 const Clock = () => {
   const [time, setTime] = useState(new Date());

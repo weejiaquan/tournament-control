@@ -6,7 +6,7 @@ import TimerScreen from './TimerScreen';
 import RaffleScreen from './RaffleScreen';
 import GlobalStyle from '../../styles/GlobalStyle';
 
-import { API_URL } from '../../config/display/';
+import { API_URL } from '../../config';
 
 const SceneManager = () => {
   const [currentScene, setCurrentScene] = useState('landing');
