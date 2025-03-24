@@ -26,18 +26,20 @@ const Login = () => {
 
     // Listen for logout events from tablet
     newSocket.on('playerLogout', (data) => {
-      console.log('Player logout event receivedAAAAAAAA:', data);
       if (data.tabletId === tabletId && data.position === position) {
         handleLogoutCleanup();
       }
     });
-  
+
+    // Keep this as a backup to ensure sync
     newSocket.on('playerUpdate', (data) => {
-      if (data.tabletId === tabletId && data.position === position && data.playerName === null) {
+      if (data.tabletId === tabletId &&
+        data.position === position &&
+        data.playerName === null) {
         handleLogoutCleanup();
       }
     });
-  
+
     return () => newSocket.disconnect();
   }, [tabletId, position]);
 

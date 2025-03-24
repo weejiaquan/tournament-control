@@ -38,7 +38,7 @@ const TabletLanding = () => {
     setSocket(newSocket);
 
     newSocket.on('playerUpdate', (data) => {
-      if (data.tabletId === tabletId) {
+      if (data.tabletId === tabletId && data.position) {  // Add position check
         setPlayerNames(prev => {
           const newNames = { ...prev };
           if (data.playerName === null) {
@@ -52,16 +52,21 @@ const TabletLanding = () => {
         });
       }
     });
-    // Add listener for logout events
+
+    // Modify the logout listener to only handle specific position
     newSocket.on('playerLogout', (data) => {
-      if (data.tabletId === tabletId) {
-        handleLogout(data.position);
+      if (data.tabletId === tabletId && data.position) {
+        setPlayerNames(prev => {
+          const newNames = { ...prev };
+          delete newNames[data.position];
+          localStorage.setItem(`tablet_${tabletId}_players`, JSON.stringify(newNames));
+          return newNames;
+        });
       }
     });
 
     return () => newSocket.disconnect();
   }, [tabletId]);
-
   useEffect(() => {
     const loggedInPlayers = Object.entries(playerNames)
       .filter(([_, name]) => name !== null)  // Filter out null values
@@ -87,24 +92,27 @@ const TabletLanding = () => {
 
   const handleLogout = (position) => {
     const positionStr = String(position);
-    const newNames = { ...playerNames };
-    const playerName = playerNames[positionStr];
-    delete newNames[positionStr];
-  
-    localStorage.setItem(`tablet_${tabletId}_players`, JSON.stringify(newNames));
-    setPlayerNames(newNames);
-  
+
+    // Update local state first
+    setPlayerNames(prev => {
+      const newNames = { ...prev };
+      delete newNames[positionStr];
+      localStorage.setItem(`tablet_${tabletId}_players`, JSON.stringify(newNames));
+      return newNames;
+    });
+
+    // Emit both events to ensure both tablet and login screens are updated
     if (socket) {
       socket.emit('playerLogout', {
         tabletId,
         position: positionStr,
-        playerName
+        playerName: null
       });
-      
       socket.emit('playerUpdate', {
         tabletId,
         position: positionStr,
-        playerName: null
+        playerName: null,
+        type: 'logout'
       });
     }
   };
@@ -137,6 +145,7 @@ const TabletLanding = () => {
             <div className="login-container">
               <p>Scan to login</p>
               <QRCodeSVG value={getLoginUrl(position)} size={200} />
+              <p>{getLoginUrl(position)}</p>
               <button
                 onClick={() => handleGuestLogin(position)}
                 className="guest-button"
