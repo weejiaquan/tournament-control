@@ -14,6 +14,22 @@ let timerState = {
   
   let timerInterval;
   
+  export const startTimer = () => {
+    if (!timerInterval) {
+      timerInterval = setInterval(() => {
+        // Allow timer to go negative
+        timerState.time -= 1;
+      }, 1000);
+    }
+  };
+  
+  export const stopTimer = () => {
+    if (timerInterval) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+    }
+  };
+
   export const getTimer = (req, res) => {
     res.json(timerState);
   };
