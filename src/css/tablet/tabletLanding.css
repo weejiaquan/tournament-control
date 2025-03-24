@@ -315,6 +315,139 @@
   margin: 10px 0;
 }
 
+.player-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+
+.life-display {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.life-number {
+  font-size: 72px;
+  font-weight: bold;
+}
+
+.delta {
+  position: absolute;
+  top: -20px;
+  right: -20px;
+  font-size: 24px;
+  opacity: 1;
+  animation: fadeOut 5s ease-out;
+}
+
+@keyframes fadeOut {
+  0% { opacity: 1; }
+  70% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.delta.positive {
+  color: #2ecc71;
+}
+
+.delta.negative {
+  color: #e74c3c;
+}
+
+.panel {
+  position: relative;
+}
+
+.player-info {
+  height: 100%;
+}
+
+.life-counter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 100%;
+  padding: 20px;
+  gap: 1rem; /* Add gap between elements */
+}
+
+.minus, .plus {
+  width: 10em;  /* Changed to em units */
+  height: 10em; /* Changed to em units to maintain square shape */
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(24px, 5vw, 48px);
+  background: transparent;
+  border: none;
+  color: inherit;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+  user-select: none;
+}
+
+.minus:hover, .plus:hover {
+  opacity: 1;
+  background: transparent;
+}
+
+.minus:before {
+  content: "−"; /* Using proper minus sign */
+}
+
+.plus:before {
+  content: "+";
+}
+.life-display {
+  flex: 1;
+  text-align: center;
+  position: relative;
+}
+
+.life-number {
+  font-size: 72px;
+  font-weight: bold;
+}
+
+.player-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 20px;
+}
+
+.player-name {
+  font-size: 32px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.end-button {
+  background-color: #e74c3c;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  margin-top: 20px;
+}
+
+.end-button:hover {
+  background-color: #c0392b;
+}
+
 @keyframes pulse {
   0% {
     box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.4);
@@ -342,4 +475,35 @@
     width: 100px !important;
     height: 100px !important;
   }
+}
+
+.player-rank {
+  display: inline-block;
+  margin-left: 1rem;
+  padding: 0.25rem 0.5rem;
+  background: rgba(255, 215, 0, 0.2);
+  border-radius: 4px;
+  font-size: 0.8em;
+}
+
+.final-stats {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 1rem;
+}
+
+.final-life {
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+.final-life.dead {
+  color: #e74c3c;
+}
+
+.life-number.dead {
+  color: #e74c3c;
 }

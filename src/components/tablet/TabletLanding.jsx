@@ -30,6 +30,15 @@ const getGridLayout = (playerCount) => {
   }
 };
 
+const getOrdinalSuffix = (num) => {
+  const j = num % 10;
+  const k = num % 100;
+  if (j === 1 && k !== 11) return "st";
+  if (j === 2 && k !== 12) return "nd";
+  if (j === 3 && k !== 13) return "rd";
+  return "th";
+};
+
 const TabletLanding = () => {
   const [searchParams] = useSearchParams();
   const tabletId = searchParams.get('tabletid');
@@ -42,9 +51,26 @@ const TabletLanding = () => {
   });
   const [socket, setSocket] = useState(null);
 
-  const [gameState, setGameState] = useState('standby'); // 'standby' | 'selecting' | 'started'
+  const [gameState, setGameState] = useState(() => {
+    const saved = localStorage.getItem(`tablet_${tabletId}_gameState`);
+    return saved || 'standby';
+  });
+
   const [activePlayer, setActivePlayer] = useState(null);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
+
+  const [lifePoints, setLifePoints] = useState(() => {
+    const saved = localStorage.getItem(`tablet_${tabletId}_lifePoints`);
+    return saved ? JSON.parse(saved) : {};
+  });
+
+  const [deltas, setDeltas] = useState({});
+  const [longPressTimers, setLongPressTimers] = useState({});
+
+  const [gameStats, setGameStats] = useState([]);
+  const [showGameOver, setShowGameOver] = useState(false);
+
+  const [deathOrder, setDeathOrder] = useState([]);
 
   useEffect(() => {
     const newSocket = io(API_URL);
@@ -162,6 +188,7 @@ const TabletLanding = () => {
               setActivePlayer(String(finalPosition));
               setSelectedPlayer(String(finalPosition));
               setGameState('started');
+              localStorage.setItem(`tablet_${tabletId}_gameState`, 'started');
             }
           }, interval);
         }
@@ -172,8 +199,54 @@ const TabletLanding = () => {
   }, [gameState, playerCount]);
 
   const handleStartGame = () => {
-    if (Object.keys(playerNames).length >= 2) { // Require at least 2 players
+    if (Object.keys(playerNames).length >= 2) {
+      // Reset life points to default when starting a new game
+      const defaultLifePoints = Object.fromEntries(
+        Object.keys(playerNames).map(pos => [pos, 40])
+      );
+      setLifePoints(defaultLifePoints);
+      setDeathOrder([]); // Reset death order
+      localStorage.setItem(`tablet_${tabletId}_lifePoints`, JSON.stringify(defaultLifePoints));
+
       setGameState('selecting');
+      localStorage.setItem(`tablet_${tabletId}_gameState`, 'started');
+    }
+  };
+
+  const handleEndGame = () => {
+    // Reset game state
+    setGameState('standby');
+    localStorage.setItem(`tablet_${tabletId}_gameState`, 'standby');
+  
+    // Reset player selection
+    setSelectedPlayer(null);
+    setActivePlayer(null);
+  
+    // Reset game over state and stats
+    setShowGameOver(false);
+    setGameStats([]);
+  
+    // Reset life points to initial state
+    const defaultLifePoints = Object.fromEntries(
+      Object.keys(playerNames).map(pos => [pos, 40])
+    );
+    setLifePoints(defaultLifePoints);
+    localStorage.setItem(`tablet_${tabletId}_lifePoints`, JSON.stringify(defaultLifePoints));
+  
+    // Reset death order
+    setDeathOrder([]);
+  
+    // Clear any deltas
+    setDeltas({});
+    
+    // Clear any long press timers
+    Object.values(longPressTimers).forEach(timer => clearTimeout(timer));
+    setLongPressTimers({});
+  
+    // Clear delta animation timers
+    if (window.deltaTimers) {
+      Object.values(window.deltaTimers).forEach(timer => clearTimeout(timer));
+      window.deltaTimers = {};
     }
   };
 
@@ -223,38 +296,196 @@ const TabletLanding = () => {
     return `${baseUrl}/tablet/login?tabletid=${tabletId}&position=${position}`;
   };
 
+  const handleLifeChange = (position, amount) => {
+    setLifePoints(prev => {
+      const currentLife = prev[position] ?? 40;
+      const newLife = currentLife + amount;
+      const finalLife = Math.max(0, newLife);
+
+      // Track death order when a player dies
+      if (currentLife > 0 && finalLife === 0) {
+        setDeathOrder(prev => [...prev, position]);
+      }
+
+      const newLifePoints = {
+        ...prev,
+        [position]: finalLife
+      };
+
+      // Check for game over condition
+      const alivePlayers = Object.entries(newLifePoints).filter(([_, life]) => life > 0);
+      if (alivePlayers.length === 1) {
+        const winner = alivePlayers[0][0];
+        // Create final standings with death order consideration
+        const standings = Object.entries(newLifePoints)
+          .map(([pos, life]) => ({
+            position: pos,
+            playerName: playerNames[pos],
+            finalLife: life,
+            deathPosition: life > 0 ? Number.MAX_SAFE_INTEGER : deathOrder.indexOf(pos)
+          }))
+          .sort((a, b) => {
+            // Winner always first
+            if (a.finalLife > 0) return -1;
+            if (b.finalLife > 0) return 1;
+
+            // For dead players, earlier index in deathOrder means they died first
+            // So they should be ranked lower
+            return a.deathPosition - b.deathPosition;
+          });
+
+        setGameStats(standings);
+        setShowGameOver(true);
+      }
+
+      localStorage.setItem(`tablet_${tabletId}_lifePoints`, JSON.stringify(newLifePoints));
+      return newLifePoints;
+    });
+
+    // Handle visual delta indicators
+    setDeltas(prev => {
+      const currentDelta = prev[position];
+      const now = Date.now();
+
+      return {
+        ...prev,
+        [position]: {
+          amount: currentDelta && (now - currentDelta.timestamp) < 2000
+            ? currentDelta.amount + amount
+            : amount,
+          timestamp: now,
+          key: now
+        }
+      };
+    });
+
+    // Clear existing timeout for delta animation
+    if (window.deltaTimers?.[position]) {
+      clearTimeout(window.deltaTimers[position]);
+    }
+
+    // Set new timeout for delta animation
+    const timer = setTimeout(() => {
+      setDeltas(prev => {
+        const newDeltas = { ...prev };
+        delete newDeltas[position];
+        return newDeltas;
+      });
+    }, 5000);
+
+    if (!window.deltaTimers) window.deltaTimers = {};
+    window.deltaTimers[position] = timer;
+  };
+
+  const handleMouseDown = (position, amount) => {
+    // Handle initial click
+    handleLifeChange(position, amount);
+
+    // Set up timer for long press
+    const timer = setInterval(() => {
+      handleLifeChange(position, amount < 0 ? -10 : 10);
+    }, 1000);
+
+    setLongPressTimers(prev => ({
+      ...prev,
+      [position]: timer
+    }));
+  };
+
+  const handleMouseUp = (position) => {
+    // Clear long press timer
+    if (longPressTimers[position]) {
+      clearTimeout(longPressTimers[position]);
+      setLongPressTimers(prev => {
+        const newTimers = { ...prev };
+        delete newTimers[position];
+        return newTimers;
+      });
+    }
+  };
+
+
   const renderPanels = () => {
     return Array.from({ length: playerCount }, (_, index) => {
       const position = index + 1;
       const playerName = playerNames[position];
       const isActive = activePlayer === String(position);
       const isSelected = selectedPlayer === String(position);
+      const life = lifePoints[position] ?? 40;
+      const delta = deltas[position];
+
+      // Find player's final rank if game is over
+      const playerRank = showGameOver ?
+        gameStats.findIndex(stat => stat.position === String(position)) + 1 :
+        null;
+
 
       return (
         <div
           key={index}
           className={`panel panel-${position} ${isActive ? 'active' : ''} ${isSelected ? 'selected' : ''}`}
         >
-          <h2>{playerName ? playerName : `Player ${position}`}</h2>
           {playerName ? (
-            <div className="player-info">
-              {gameState === 'standby' && (
-                <button
-                  onClick={() => handleLogout(position)}
-                  className="logout-button"
-                >
+            <div className="player-content">
+              <h2 className="player-name">
+                {playerName}
+                {showGameOver && (
+                  <span className="player-rank">
+                    {playerRank}{getOrdinalSuffix(playerRank)}
+                  </span>
+                )}
+              </h2>
+              {gameState === 'standby' && playerName && (
+                <button onClick={() => handleLogout(position)} className="logout-button">
                   Logout
                 </button>
               )}
-              {gameState === 'started' && isSelected && (
-                <p className="selected-message">Start from here!</p>
+              {(gameState === 'started' || showGameOver) && (
+                <div className="life-counter">
+                  {!showGameOver ? (
+                    <>
+                      <button
+                        className="minus"
+                        onMouseDown={() => handleMouseDown(position, -1)}
+                        onMouseUp={() => handleMouseUp(position)}
+                        onMouseLeave={() => handleMouseUp(position)}
+                        disabled={life <= 0}
+                      />
+                      <div className="life-display">
+                        <span className={`life-number ${life <= 0 ? 'dead' : ''}`}>
+                          {life <= 0 ? 'DEAD' : life}
+                        </span>
+                        {delta && (
+                          <span
+                            key={delta.key}
+                            className={`delta ${delta.amount > 0 ? 'positive' : 'negative'}`}
+                          >
+                            {delta.amount > 0 ? '+' : ''}{delta.amount}
+                          </span>
+                        )}
+                      </div>
+                      <button
+                        className="plus"
+                        onMouseDown={() => handleMouseDown(position, 1)}
+                        onMouseUp={() => handleMouseUp(position)}
+                        onMouseLeave={() => handleMouseUp(position)}
+                        disabled={life <= 0}
+                      />
+                    </>
+                  ) : (
+                    <div className="final-stats">
+                      <div className={`final-life ${life <= 0 ? 'dead' : ''}`}>
+                        {life <= 0 ? 'DEAD' : `Final Life: ${life}`}
+                      </div>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           ) : (
             <div className="login-container">
               <p>Scan to login</p>
               <QRCodeSVG value={getLoginUrl(position)} size={200} />
-              {/* <p>{getLoginUrl(position)}</p> */}
               <button
                 onClick={() => handleGuestLogin(position)}
                 className="guest-button"
@@ -275,16 +506,24 @@ const TabletLanding = () => {
         <div className={`split-screen ${getGridLayout(playerCount)}`}>
           {renderPanels()}
         </div>
-        {gameState === 'standby' && allPlayersReady && (
-          <div className="game-controls">
+        <div className="game-controls">
+          {gameState === 'standby' && allPlayersReady && (
             <button
               className="start-button"
               onClick={handleStartGame}
             >
               Start Game
             </button>
-          </div>
-        )}
+          )}
+          {gameState === 'started' && (
+            <button
+              className="end-button"
+              onClick={handleEndGame}
+            >
+              End Game
+            </button>
+          )}
+        </div>
       </div>
     </>
   );
