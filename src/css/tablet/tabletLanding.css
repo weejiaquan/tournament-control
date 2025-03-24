@@ -1,5 +1,5 @@
 :root {
-  --enable-panel-rotation: 1; /* 1 for enabled, 0 for disabled */
+  --enable-panel-rotation: 0; /* 1 for enabled, 0 for disabled */
 }
 
 
@@ -301,6 +301,18 @@
 
 .start-button:hover {
   background-color: #45a049;
+}
+
+.game-status {
+  margin: 10px 0;
+  font-weight: bold;
+  text-transform: capitalize;
+}
+
+.selected-message {
+  color: #2ecc71;
+  font-weight: bold;
+  margin: 10px 0;
 }
 
 @keyframes pulse {

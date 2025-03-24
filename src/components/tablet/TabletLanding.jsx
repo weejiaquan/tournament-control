@@ -238,13 +238,17 @@ const TabletLanding = () => {
           <h2>{playerName ? playerName : `Player ${position}`}</h2>
           {playerName ? (
             <div className="player-info">
-              <h3>Ready to play!</h3>
-              <button
-                onClick={() => handleLogout(position)}
-                className="logout-button"
-              >
-                Logout
-              </button>
+              {gameState === 'standby' && (
+                <button
+                  onClick={() => handleLogout(position)}
+                  className="logout-button"
+                >
+                  Logout
+                </button>
+              )}
+              {gameState === 'started' && isSelected && (
+                <p className="selected-message">Start from here!</p>
+              )}
             </div>
           ) : (
             <div className="login-container">
