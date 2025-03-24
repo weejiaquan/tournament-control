@@ -1,3 +1,8 @@
+:root {
+  --enable-panel-rotation: 1; /* 1 for enabled, 0 for disabled */
+}
+
+
 .tablet-container {
   height: 100vh;
   width: 100vw;
@@ -23,8 +28,36 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.grid-2-players .panel-1 {
+  transform: rotate(calc(90deg * var(--enable-panel-rotation)));
+}
+
+.grid-2-players .panel-2 {
+  transform: rotate(calc(-90deg * var(--enable-panel-rotation)));
+}
+
 .grid-3-players {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  grid-template-areas: 
+    "panel1 panel3"
+    "panel2 panel3";
+}
+
+/* Rotation and positioning for 3 players */
+.grid-3-players .panel-1 {
+  grid-area: panel1;
+  transform: rotate(calc(180deg * var(--enable-panel-rotation)));
+}
+
+.grid-3-players .panel-2 {
+  grid-area: panel2;
+  transform: rotate(calc(0deg * var(--enable-panel-rotation)));
+}
+
+.grid-3-players .panel-3 {
+  grid-area: panel3;
+  transform: rotate(calc(-90deg * var(--enable-panel-rotation)));
 }
 
 .grid-4-players {
@@ -32,15 +65,77 @@
   grid-template-rows: repeat(2, minmax(0, 1fr));
 }
 
+.grid-4-players .panel-1 {
+  transform: rotate(calc(180deg * var(--enable-panel-rotation)));
+}
+.grid-4-players .panel-2 {
+  transform: rotate(calc(180deg * var(--enable-panel-rotation)));
+}
+.grid-4-players .panel-3 {
+  transform: rotate(calc(0deg * var(--enable-panel-rotation)));
+}
+.grid-4-players .panel-4 {
+  transform: rotate(calc(0deg * var(--enable-panel-rotation)));
+}
+
 .grid-5-players {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  grid-template-rows: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  grid-template-areas: 
+    "panel1 panel2 panel3"
+    "panel4 panel5 panel3";
+}
+
+/* Rotation and positioning for 5 players */
+.grid-5-players .panel-1 {
+  grid-area: panel1;
+  transform: rotate(calc(180deg * var(--enable-panel-rotation)));
+}
+
+.grid-5-players .panel-2 {
+  grid-area: panel2;
+  transform: rotate(calc(180deg * var(--enable-panel-rotation)));
+}
+
+.grid-5-players .panel-3 {
+  grid-area: panel3;
+  transform: rotate(calc(270deg * var(--enable-panel-rotation)));
+}
+
+.grid-5-players .panel-4 {
+  grid-area: panel4;
+  transform: rotate(calc(0deg * var(--enable-panel-rotation)));
+}
+
+.grid-5-players .panel-5 {
+  grid-area: panel5;
+  transform: rotate(calc(0deg * var(--enable-panel-rotation)));
 }
 
 .grid-6-players {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   grid-template-rows: repeat(2, minmax(0, 1fr));
 }
+
+.grid-6-players .panel-1 {
+  transform: rotate(calc(180deg * var(--enable-panel-rotation)));
+}
+.grid-6-players .panel-2 {
+  transform: rotate(calc(180deg * var(--enable-panel-rotation)));
+}
+.grid-6-players .panel-3 {
+  transform: rotate(calc(180deg * var(--enable-panel-rotation)));
+}
+.grid-6-players .panel-4 {
+  transform: rotate(calc(0deg * var(--enable-panel-rotation)));
+}
+.grid-6-players .panel-5 {
+  transform: rotate(calc(0deg * var(--enable-panel-rotation)));
+}
+.grid-6-players .panel-6 {
+  transform: rotate(calc(0deg * var(--enable-panel-rotation)));
+}
+
 
 .panel {
   background: rgba(255, 255, 255, 0.1);
@@ -58,6 +153,7 @@
   padding: 0.5rem; /* Reduce padding */
   height: 100%; /* Fill available space */
   overflow: hidden; /* Prevent scrolling */
+  transform-origin: center center;
 }
 
 .panel.active {
@@ -68,37 +164,8 @@
   outline: 3px solid #4CAF50;
 }
 
-/* Specific panel positioning for 3 and 5 players */
-.grid-3-players .panel-1 {
-  grid-area: panel1;
-}
-
-.grid-3-players .panel-2 {
-  grid-area: panel2;
-}
-
-.grid-3-players .panel-3 {
-  grid-area: panel3;
-}
-
-.grid-5-players .panel-1 {
-  grid-area: panel1;
-}
-
-.grid-5-players .panel-2 {
-  grid-area: panel2;
-}
-
-.grid-5-players .panel-3 {
-  grid-area: panel3;
-}
-
-.grid-5-players .panel-4 {
-  grid-area: panel4;
-}
-
-.grid-5-players .panel-5 {
-  grid-area: panel5;
+.panel > * {
+  transform: rotate(calc(-1 * var(--enable-panel-rotation) * inherit));
 }
 
 .login-page {

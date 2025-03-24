@@ -34,6 +34,7 @@ const TabletLanding = () => {
   const [searchParams] = useSearchParams();
   const tabletId = searchParams.get('tabletid');
   const playerCount = parseInt(searchParams.get('players') || '2', 10);
+
   // Initialize state from localStorage or empty object
   const [playerNames, setPlayerNames] = useState(() => {
     const saved = localStorage.getItem(`tablet_${tabletId}_players`);
@@ -93,23 +94,60 @@ const TabletLanding = () => {
   }, [playerNames]);
 
   useEffect(() => {
+    // Get all currently logged in players
+    const currentPlayers = Object.keys(playerNames).map(Number);
+
+    // Find players that need to be logged out (those with position > playerCount)
+    const playersToLogout = currentPlayers.filter(position => position > playerCount);
+
+    if (playersToLogout.length > 0) {
+      // Create new player names object without the excess players
+      const newNames = { ...playerNames };
+      playersToLogout.forEach(position => {
+        delete newNames[position];
+
+        // Emit logout events for each removed player
+        if (socket) {
+          socket.emit('playerLogout', {
+            tabletId,
+            position: String(position),
+            playerName: null
+          });
+          socket.emit('playerUpdate', {
+            tabletId,
+            position: String(position),
+            playerName: null,
+            type: 'logout'
+          });
+        }
+      });
+
+      // Update local storage and state
+      localStorage.setItem(`tablet_${tabletId}_players`, JSON.stringify(newNames));
+      setPlayerNames(newNames);
+
+      console.log(`Logged out players in positions: ${playersToLogout.join(', ')}`);
+    }
+  }, [playerCount, tabletId, socket, playerNames]);
+
+  useEffect(() => {
     let intervalId;
     let currentPosition = 0;
-    
+
     if (gameState === 'selecting') {
       // Determine final position before starting animation
       const finalPosition = Math.floor(Math.random() * playerCount) + 1;
       // Calculate total iterations (5 full rotations plus final position)
       const totalIterations = (playerCount * 5) + finalPosition;
-      
+
       // Start with fast interval that gradually slows down
       let interval = 100;
-      
+
       intervalId = setInterval(() => {
         currentPosition++;
         const currentPlayer = (currentPosition % playerCount) + 1;
         setActivePlayer(String(currentPlayer));
-        
+
         // Gradually increase interval duration for slowdown effect
         if (currentPosition > totalIterations * 0.7) {
           interval += 50;
@@ -118,7 +156,7 @@ const TabletLanding = () => {
             currentPosition++;
             const currentPlayer = (currentPosition % playerCount) + 1;
             setActivePlayer(String(currentPlayer));
-            
+
             if (currentPosition >= totalIterations) {
               clearInterval(intervalId);
               setActivePlayer(String(finalPosition));
@@ -193,8 +231,8 @@ const TabletLanding = () => {
       const isSelected = selectedPlayer === String(position);
 
       return (
-        <div 
-          key={index} 
+        <div
+          key={index}
           className={`panel panel-${position} ${isActive ? 'active' : ''} ${isSelected ? 'selected' : ''}`}
         >
           <h2>{playerName ? playerName : `Player ${position}`}</h2>
@@ -228,22 +266,22 @@ const TabletLanding = () => {
 
   return (
     <>
-    <GlobalStyle />
-    <div className="tablet-container">
-      <div className={`split-screen ${getGridLayout(playerCount)}`}>
-        {renderPanels()}
-      </div>
-      {gameState === 'standby' && allPlayersReady && (
-        <div className="game-controls">
-          <button 
-            className="start-button"
-            onClick={handleStartGame}
-          >
-            Start Game
-          </button>
+      <GlobalStyle />
+      <div className="tablet-container">
+        <div className={`split-screen ${getGridLayout(playerCount)}`}>
+          {renderPanels()}
         </div>
-      )}
-    </div>
+        {gameState === 'standby' && allPlayersReady && (
+          <div className="game-controls">
+            <button
+              className="start-button"
+              onClick={handleStartGame}
+            >
+              Start Game
+            </button>
+          </div>
+        )}
+      </div>
     </>
   );
 };
