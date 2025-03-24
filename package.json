@@ -28,7 +28,7 @@
     "vite": "^5.0.0"
   },
   "scripts": {
-    "dev:server": "node server/server.js",
+    "dev:server": "nodemon server/server.js",
     "dev:client": "vite",
     "dev": "vite",
     "build": "vite build",
