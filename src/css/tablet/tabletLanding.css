@@ -1,151 +1,266 @@
 .tablet-container {
-    width: 100vw;
-    height: 100vh;
-    overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.split-screen {
+  flex: 1;
+  display: grid;
+  gap: 0.5rem; /* Reduce gap */
+  padding: 0.5rem; /* Reduce padding */
+  height: calc(100vh - 60px); /* Account for game-controls height */
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden; /* Prevent scrolling */
+}
+
+/* Grid layouts */
+.grid-2-players {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.grid-3-players {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.grid-4-players {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+}
+
+.grid-5-players {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+}
+
+.grid-6-players {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+}
+
+.panel {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow-y: auto;
+  transition: all 0.3s ease-in-out;
+  width: 100%;
+  box-sizing: border-box;
+  max-width: 100%;
+  min-height: 100px; /* Reduce minimum height */
+  padding: 0.5rem; /* Reduce padding */
+  height: 100%; /* Fill available space */
+  overflow: hidden; /* Prevent scrolling */
+}
+
+.panel.active {
+  outline: 3px solid #4CAF50;
+}
+
+.panel.selected {
+  outline: 3px solid #4CAF50;
+}
+
+/* Specific panel positioning for 3 and 5 players */
+.grid-3-players .panel-1 {
+  grid-area: panel1;
+}
+
+.grid-3-players .panel-2 {
+  grid-area: panel2;
+}
+
+.grid-3-players .panel-3 {
+  grid-area: panel3;
+}
+
+.grid-5-players .panel-1 {
+  grid-area: panel1;
+}
+
+.grid-5-players .panel-2 {
+  grid-area: panel2;
+}
+
+.grid-5-players .panel-3 {
+  grid-area: panel3;
+}
+
+.grid-5-players .panel-4 {
+  grid-area: panel4;
+}
+
+.grid-5-players .panel-5 {
+  grid-area: panel5;
+}
+
+.login-page {
+  max-width: 400px;
+  margin: 40px auto;
+  padding: 20px;
+}
+
+.login-page form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.login-page input {
+  width: 100%;
+  padding: 8px;
+  margin-top: 8px;
+}
+
+.login-page button {
+  padding: 10px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.guest-button {
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  background-color: #f0f0f0;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.guest-button:hover {
+  background-color: #e0e0e0;
+}
+
+.logout-button {
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  background-color: #dc3545;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.logout-button:hover {
+  background-color: #c82333;
+}
+
+.logged-in-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 2rem;
+}
+
+.logged-in-view h2 {
+  margin: 0;
+  color: #333;
+}
+
+.logged-in-view .logout-button {
+  margin-top: 2rem;
+  padding: 0.5rem 1rem;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.logged-in-view .logout-button:hover {
+  background-color: #c82333;
+}
+
+.login-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  max-width: 100%;
+  padding: 0.5rem;
+  box-sizing: border-box;
+}
+
+/* QR Code container */
+.login-container .qrcode {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Make URLs wrap */
+.login-container p {
+  word-break: break-all;
+  max-width: 100%;
+}
+
+.game-controls {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(5px);
+  display: flex;
+  justify-content: center;
+  z-index: 100;
+  height: 60px; /* Fixed height */
+  padding: 0.5rem;
+}
+
+.start-button {
+  padding: 15px 30px;
+  font-size: 1.2em;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.start-button:hover {
+  background-color: #45a049;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.4);
   }
-  
-  .split-screen {
-    width: 100%;
-    height: 100%;
-    display: grid;
-    gap: 4px;
+
+  70% {
+    box-shadow: 0 0 0 10px rgba(76, 175, 80, 0);
   }
-  
-  /* 2 players - left right */
-  .grid-2-players {
-    grid-template-columns: 1fr 1fr;
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
   }
-  
-  /* 3 players - up down right */
-  .grid-3-players {
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: 1fr 1fr;
-    grid-template-areas: 
-      "panel1 panel3"
-      "panel2 panel3";
-  }
-  
-  /* 4 players - 2x2 grid */
-  .grid-4-players {
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: 1fr 1fr;
-  }
-  
-  /* 5 players - 2x2 grid + right panel */
-  .grid-5-players {
-    grid-template-columns: 1fr 1fr 1fr;
-    grid-template-rows: 1fr 1fr;
-    grid-template-areas: 
-      "panel1 panel2 panel5"
-      "panel3 panel4 panel5";
-  }
-  
-  /* 6 players - 3x2 grid */
-  .grid-6-players {
-    grid-template-columns: 1fr 1fr 1fr;
-    grid-template-rows: 1fr 1fr;
-  }
-  
+}
+
+@media screen and (max-height: 768px) {
   .panel {
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    background-color: #f0f0f0;
-    border: 1px solid #ddd;
+    min-height: 80px; /* Even smaller for small screens */
   }
   
-  /* Specific panel positioning for 3 and 5 players */
-  .grid-3-players .panel-1 { grid-area: panel1; }
-  .grid-3-players .panel-2 { grid-area: panel2; }
-  .grid-3-players .panel-3 { grid-area: panel3; }
-  
-  .grid-5-players .panel-1 { grid-area: panel1; }
-  .grid-5-players .panel-2 { grid-area: panel2; }
-  .grid-5-players .panel-3 { grid-area: panel3; }
-  .grid-5-players .panel-4 { grid-area: panel4; }
-  .grid-5-players .panel-5 { grid-area: panel5; }
-
-  .login-page {
-    max-width: 400px;
-    margin: 40px auto;
-    padding: 20px;
+  .login-container {
+    gap: 0.25rem;
   }
   
-  .login-page form {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
+  .login-container .qrcode {
+    width: 100px !important;
+    height: 100px !important;
   }
-  
-  .login-page input {
-    width: 100%;
-    padding: 8px;
-    margin-top: 8px;
-  }
-  
-  .login-page button {
-    padding: 10px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-
-  .guest-button {
-    margin-top: 1rem;
-    padding: 0.5rem 1rem;
-    border: none;
-    border-radius: 4px;
-    background-color: #f0f0f0;
-    cursor: pointer;
-    transition: background-color 0.2s;
-  }
-  
-  .guest-button:hover {
-    background-color: #e0e0e0;
-  }
-
-  .logout-button {
-    margin-top: 1rem;
-    padding: 0.5rem 1rem;
-    border: none;
-    border-radius: 4px;
-    background-color: #dc3545;
-    color: white;
-    cursor: pointer;
-    transition: background-color 0.2s;
-  }
-  
-  .logout-button:hover {
-    background-color: #c82333;
-  }
-
-  .logged-in-view {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1rem;
-    padding: 2rem;
-  }
-  
-  .logged-in-view h2 {
-    margin: 0;
-    color: #333;
-  }
-  
-  .logged-in-view .logout-button {
-    margin-top: 2rem;
-    padding: 0.5rem 1rem;
-    background-color: #dc3545;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-  
-  .logged-in-view .logout-button:hover {
-    background-color: #c82333;
-  }
+}

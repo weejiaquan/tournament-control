@@ -4,6 +4,14 @@ import { QRCodeSVG } from 'qrcode.react';
 import { io } from 'socket.io-client';
 import '../../css/tablet/tabletLanding.css';
 import { API_URL } from '../../config';
+import GlobalStyle from '../../styles/GlobalStyle';
+import styled from "styled-components";
+
+const GlobalOverride = styled.div`
+  html, body, #root {
+    overflow: auto !important;
+  }
+`;
 
 const getGridLayout = (playerCount) => {
   switch (playerCount) {
@@ -32,6 +40,10 @@ const TabletLanding = () => {
     return saved ? JSON.parse(saved) : {};
   });
   const [socket, setSocket] = useState(null);
+
+  const [gameState, setGameState] = useState('standby'); // 'standby' | 'selecting' | 'started'
+  const [activePlayer, setActivePlayer] = useState(null);
+  const [selectedPlayer, setSelectedPlayer] = useState(null);
 
   useEffect(() => {
     const newSocket = io(API_URL);
@@ -80,6 +92,56 @@ const TabletLanding = () => {
     }
   }, [playerNames]);
 
+  useEffect(() => {
+    let intervalId;
+    let currentPosition = 0;
+    
+    if (gameState === 'selecting') {
+      // Determine final position before starting animation
+      const finalPosition = Math.floor(Math.random() * playerCount) + 1;
+      // Calculate total iterations (5 full rotations plus final position)
+      const totalIterations = (playerCount * 5) + finalPosition;
+      
+      // Start with fast interval that gradually slows down
+      let interval = 100;
+      
+      intervalId = setInterval(() => {
+        currentPosition++;
+        const currentPlayer = (currentPosition % playerCount) + 1;
+        setActivePlayer(String(currentPlayer));
+        
+        // Gradually increase interval duration for slowdown effect
+        if (currentPosition > totalIterations * 0.7) {
+          interval += 50;
+          clearInterval(intervalId);
+          intervalId = setInterval(() => {
+            currentPosition++;
+            const currentPlayer = (currentPosition % playerCount) + 1;
+            setActivePlayer(String(currentPlayer));
+            
+            if (currentPosition >= totalIterations) {
+              clearInterval(intervalId);
+              setActivePlayer(String(finalPosition));
+              setSelectedPlayer(String(finalPosition));
+              setGameState('started');
+            }
+          }, interval);
+        }
+      }, interval);
+    }
+
+    return () => clearInterval(intervalId);
+  }, [gameState, playerCount]);
+
+  const handleStartGame = () => {
+    if (Object.keys(playerNames).length >= 2) { // Require at least 2 players
+      setGameState('selecting');
+    }
+  };
+
+  const allPlayersReady = Object.keys(playerNames).length === playerCount;
+
+
   const handleGuestLogin = (position) => {
     const positionStr = String(position);
     const newNames = {
@@ -127,9 +189,14 @@ const TabletLanding = () => {
     return Array.from({ length: playerCount }, (_, index) => {
       const position = index + 1;
       const playerName = playerNames[position];
+      const isActive = activePlayer === String(position);
+      const isSelected = selectedPlayer === String(position);
 
       return (
-        <div key={index} className={`panel panel-${position}`}>
+        <div 
+          key={index} 
+          className={`panel panel-${position} ${isActive ? 'active' : ''} ${isSelected ? 'selected' : ''}`}
+        >
           <h2>{playerName ? playerName : `Player ${position}`}</h2>
           {playerName ? (
             <div className="player-info">
@@ -145,7 +212,7 @@ const TabletLanding = () => {
             <div className="login-container">
               <p>Scan to login</p>
               <QRCodeSVG value={getLoginUrl(position)} size={200} />
-              <p>{getLoginUrl(position)}</p>
+              {/* <p>{getLoginUrl(position)}</p> */}
               <button
                 onClick={() => handleGuestLogin(position)}
                 className="guest-button"
@@ -160,11 +227,24 @@ const TabletLanding = () => {
   };
 
   return (
+    <>
+    <GlobalStyle />
     <div className="tablet-container">
       <div className={`split-screen ${getGridLayout(playerCount)}`}>
         {renderPanels()}
       </div>
+      {gameState === 'standby' && allPlayersReady && (
+        <div className="game-controls">
+          <button 
+            className="start-button"
+            onClick={handleStartGame}
+          >
+            Start Game
+          </button>
+        </div>
+      )}
     </div>
+    </>
   );
 };
 
