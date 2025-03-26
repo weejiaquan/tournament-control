@@ -72,6 +72,12 @@ const TabletLanding = () => {
 
   const [deathOrder, setDeathOrder] = useState([]);
 
+  const [commanderDamage, setCommanderDamage] = useState(() => {
+    const saved = localStorage.getItem(`tablet_${tabletId}_commanderDamage`);
+    return saved ? JSON.parse(saved) : {};
+  });
+
+
   useEffect(() => {
     const newSocket = io(API_URL);
     setSocket(newSocket);
@@ -217,32 +223,37 @@ const TabletLanding = () => {
     // Reset game state
     setGameState('standby');
     localStorage.setItem(`tablet_${tabletId}_gameState`, 'standby');
-  
+
     // Reset player selection
     setSelectedPlayer(null);
     setActivePlayer(null);
-  
+
     // Reset game over state and stats
     setShowGameOver(false);
     setGameStats([]);
-  
+
     // Reset life points to initial state
     const defaultLifePoints = Object.fromEntries(
       Object.keys(playerNames).map(pos => [pos, 40])
     );
     setLifePoints(defaultLifePoints);
     localStorage.setItem(`tablet_${tabletId}_lifePoints`, JSON.stringify(defaultLifePoints));
-  
+
+    // Reset commander damage
+    setCommanderDamage({});
+    localStorage.removeItem(`tablet_${tabletId}_commanderDamage`);
+
+
     // Reset death order
     setDeathOrder([]);
-  
+
     // Clear any deltas
     setDeltas({});
-    
+
     // Clear any long press timers
     Object.values(longPressTimers).forEach(timer => clearTimeout(timer));
     setLongPressTimers({});
-  
+
     // Clear delta animation timers
     if (window.deltaTimers) {
       Object.values(window.deltaTimers).forEach(timer => clearTimeout(timer));
@@ -262,6 +273,28 @@ const TabletLanding = () => {
     localStorage.setItem(`tablet_${tabletId}_players`, JSON.stringify(newNames));
     setPlayerNames(newNames);
   };
+
+  const handleCommanderDamage = (fromPosition, toPosition, amount) => {
+    setCommanderDamage(prev => {
+      const key = `${fromPosition}-${toPosition}`;
+      const currentDamage = prev[key] || 0;
+      const newDamage = Math.max(0, currentDamage + amount);
+
+      const newCommanderDamage = {
+        ...prev,
+        [key]: newDamage
+      };
+
+      // If commander damage reaches 21 or more, the player loses
+      if (newDamage >= 21) {
+        handleLifeChange(toPosition, -lifePoints[toPosition]); // Set life to 0
+      }
+
+      localStorage.setItem(`tablet_${tabletId}_commanderDamage`, JSON.stringify(newCommanderDamage));
+      return newCommanderDamage;
+    });
+  };
+
 
   const handleLogout = (position) => {
     const positionStr = String(position);
@@ -464,6 +497,7 @@ const TabletLanding = () => {
                           </span>
                         )}
                       </div>
+
                       <button
                         className="plus"
                         onMouseDown={() => handleMouseDown(position, 1)}
@@ -479,6 +513,38 @@ const TabletLanding = () => {
                       </div>
                     </div>
                   )}
+                </div>
+
+
+              )}
+
+              {(gameState === 'started' && !showGameOver) && (
+                <div className={`commander-damage-grid player-count-${playerCount}`}>
+                  {Array.from({ length: playerCount }, (_, idx) => {
+                    const fromPosition = idx + 1;
+                    const damageKey = `${fromPosition}-${position}`;
+                    const damage = commanderDamage[damageKey] || 0;
+
+                    return (
+                        <div key={fromPosition} className={`commander-damage-counter`}>
+
+                        <button
+                          className="minus"
+                          onClick={() => handleCommanderDamage(fromPosition, position, -1)}
+                          disabled={damage <= 0}
+                        ></button>
+                        <span className="commander-label">
+                          {fromPosition === position ? 'Self' : `P${fromPosition}`}
+                        </span>
+                        <span className="damage-amount">{damage}</span>
+                        <button
+                          className="plus"
+                          onClick={() => handleCommanderDamage(fromPosition, position, 1)}
+                          disabled={damage >= 21}
+                        ></button>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
