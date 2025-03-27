@@ -219,57 +219,42 @@
   gap: 0.5rem;
 }
 
-/* Normal order for players 4-6 */
-.panel-4 .commander-damage-grid.player-count-6 .commander-damage-counter:nth-child(1),
-.panel-5 .commander-damage-grid.player-count-6 .commander-damage-counter:nth-child(1),
-.panel-6 .commander-damage-grid.player-count-6 .commander-damage-counter:nth-child(1) {
-  grid-area: 1 / 1 / 2 / 2;  /* First row, first column */
-}
-
-.panel-4 .commander-damage-grid.player-count-6 .commander-damage-counter:nth-child(2),
-.panel-5 .commander-damage-grid.player-count-6 .commander-damage-counter:nth-child(2),
-.panel-6 .commander-damage-grid.player-count-6 .commander-damage-counter:nth-child(2) {
-  grid-area: 1 / 2 / 2 / 3;  /* First row, second column */
-}
-
-.panel-4 .commander-damage-grid.player-count-6 .commander-damage-counter:nth-child(3),
-.panel-5 .commander-damage-grid.player-count-6 .commander-damage-counter:nth-child(3),
-.panel-6 .commander-damage-grid.player-count-6 .commander-damage-counter:nth-child(3) {
-  grid-area: 1 / 3 / 2 / 4;  /* First row, third column */
-}
-
-/* Reversed order for players 1-3 (upside down players) */
+/* For panels 1-3 (upside down) */
 .panel-1 .commander-damage-grid.player-count-6 .commander-damage-counter:nth-child(1),
 .panel-2 .commander-damage-grid.player-count-6 .commander-damage-counter:nth-child(1),
 .panel-3 .commander-damage-grid.player-count-6 .commander-damage-counter:nth-child(1) {
-  grid-area: 1 / 3 / 2 / 4;  /* First row, third column */
+  grid-area: 2 / 3 / 3 / 4;  /* Second row, third column */
 }
 
 .panel-1 .commander-damage-grid.player-count-6 .commander-damage-counter:nth-child(2),
 .panel-2 .commander-damage-grid.player-count-6 .commander-damage-counter:nth-child(2),
 .panel-3 .commander-damage-grid.player-count-6 .commander-damage-counter:nth-child(2) {
-  grid-area: 1 / 2 / 2 / 3;  /* First row, second column */
+  grid-area: 2 / 2 / 3 / 3;  /* Second row, second column */
 }
 
 .panel-1 .commander-damage-grid.player-count-6 .commander-damage-counter:nth-child(3),
 .panel-2 .commander-damage-grid.player-count-6 .commander-damage-counter:nth-child(3),
 .panel-3 .commander-damage-grid.player-count-6 .commander-damage-counter:nth-child(3) {
-  grid-area: 1 / 1 / 2 / 2;  /* First row, first column */
-}
-
-/* Bottom row stays the same for all players */
-.commander-damage-grid.player-count-6 .commander-damage-counter:nth-child(4) {
   grid-area: 2 / 1 / 3 / 2;  /* Second row, first column */
 }
 
-.commander-damage-grid.player-count-6 .commander-damage-counter:nth-child(5) {
-  grid-area: 2 / 2 / 3 / 3;  /* Second row, second column */
+.panel-1 .commander-damage-grid.player-count-6 .commander-damage-counter:nth-child(4),
+.panel-2 .commander-damage-grid.player-count-6 .commander-damage-counter:nth-child(4),
+.panel-3 .commander-damage-grid.player-count-6 .commander-damage-counter:nth-child(4) {
+  grid-area: 1 / 3 / 2 / 4;  /* First row, third column */
 }
 
-.commander-damage-grid.player-count-6 .commander-damage-counter:nth-child(6) {
-  grid-area: 2 / 3 / 3 / 4;  /* Second row, third column */
+.panel-1 .commander-damage-grid.player-count-6 .commander-damage-counter:nth-child(5),
+.panel-2 .commander-damage-grid.player-count-6 .commander-damage-counter:nth-child(5),
+.panel-3 .commander-damage-grid.player-count-6 .commander-damage-counter:nth-child(5) {
+  grid-area: 1 / 2 / 2 / 3;  /* First row, second column */
 }
 
+.panel-1 .commander-damage-grid.player-count-6 .commander-damage-counter:nth-child(6),
+.panel-2 .commander-damage-grid.player-count-6 .commander-damage-counter:nth-child(6),
+.panel-3 .commander-damage-grid.player-count-6 .commander-damage-counter:nth-child(6) {
+  grid-area: 1 / 1 / 2 / 2;  /* First row, first column */
+}
 
 .panel {
   background: rgba(255, 255, 255, 0.1);
