@@ -285,6 +285,9 @@ const TabletLanding = () => {
         [key]: newDamage
       };
 
+      // Also reduce life points by the same amount
+      handleLifeChange(toPosition, -amount);
+
       // If commander damage reaches 21 or more, the player loses
       if (newDamage >= 21) {
         handleLifeChange(toPosition, -lifePoints[toPosition]); // Set life to 0
@@ -347,7 +350,7 @@ const TabletLanding = () => {
 
       // Check for game over condition
       const alivePlayers = Object.entries(newLifePoints).filter(([_, life]) => life > 0);
-      if (alivePlayers.length === 1) {
+      if (alivePlayers.length === 1) {  
         const winner = alivePlayers[0][0];
         // Create final standings with death order consideration
         const standings = Object.entries(newLifePoints)
@@ -413,12 +416,26 @@ const TabletLanding = () => {
   const handleMouseDown = (position, amount) => {
     // Handle initial click
     handleLifeChange(position, amount);
-
+  
     // Set up timer for long press
     const timer = setInterval(() => {
+      // Check life points inside interval to stop when reaching 0
+      setLifePoints(prev => {
+        const life = prev[position] ?? 40;
+        if (life <= 0) {
+          clearInterval(timer); // Clear the interval if player dies
+          setLongPressTimers(prev => {
+            const newTimers = { ...prev };
+            delete newTimers[position];
+            return newTimers;
+          });
+          return prev; // Return unchanged state
+        }
+        return prev; // Let handleLifeChange handle the actual change
+      });
       handleLifeChange(position, amount < 0 ? -10 : 10);
     }, 1000);
-
+  
     setLongPressTimers(prev => ({
       ...prev,
       [position]: timer
@@ -482,7 +499,6 @@ const TabletLanding = () => {
                         onMouseDown={() => handleMouseDown(position, -1)}
                         onMouseUp={() => handleMouseUp(position)}
                         onMouseLeave={() => handleMouseUp(position)}
-                        disabled={life <= 0}
                       />
                       <div className="life-display">
                         <span className={`life-number ${life <= 0 ? 'dead' : ''}`}>
@@ -503,7 +519,6 @@ const TabletLanding = () => {
                         onMouseDown={() => handleMouseDown(position, 1)}
                         onMouseUp={() => handleMouseUp(position)}
                         onMouseLeave={() => handleMouseUp(position)}
-                        disabled={life <= 0}
                       />
                     </>
                   ) : (
