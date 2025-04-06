@@ -6,7 +6,8 @@ import TimerScreen from './display/TimerScreen';
 import ControlPanel from './display/ControlPanel';
 import SceneManager from './display/SceneManager';
 import RaffleScreen from './display/RaffleScreen';
-import TabletLanding from './tablet/TabletLanding'; // Break out TabletLanding for direct import
+import MTGCounter from './tablet/MTGCounter'; 
+import TabletLanding from './tablet/TabletLanding';
 import Login from './tablet/Login';
 
 const App = () => {
@@ -22,6 +23,7 @@ const App = () => {
 
         {/* Tablet Routes */}
         <Route path="/tablet" element={<TabletLanding />} />
+        <Route path="/tablet/mtgcounter" element={<MTGCounter />} />
         <Route path="/tablet/login" element={<Login />} />
       </Routes>
     </AppContainer>
