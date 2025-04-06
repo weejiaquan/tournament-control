@@ -120,6 +120,55 @@
   transform: rotate(calc(0deg * var(--enable-panel-rotation)));
 }
 
+.commander-damage-grid.player-count-4 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 0.5rem;
+}
+
+/* For panels 1-2 (upside down) */
+.panel-1 .commander-damage-grid.player-count-4 .commander-damage-counter:nth-child(1),
+.panel-2 .commander-damage-grid.player-count-4 .commander-damage-counter:nth-child(1) {
+  grid-area: 2 / 2 / 3 / 3;  /* Bottom right */
+}
+
+.panel-1 .commander-damage-grid.player-count-4 .commander-damage-counter:nth-child(2),
+.panel-2 .commander-damage-grid.player-count-4 .commander-damage-counter:nth-child(2) {
+  grid-area: 2 / 1 / 3 / 2;  /* Bottom left */
+}
+
+.panel-1 .commander-damage-grid.player-count-4 .commander-damage-counter:nth-child(3),
+.panel-2 .commander-damage-grid.player-count-4 .commander-damage-counter:nth-child(3) {
+  grid-area: 1 / 2 / 2 / 3;  /* Top right */
+}
+
+.panel-1 .commander-damage-grid.player-count-4 .commander-damage-counter:nth-child(4),
+.panel-2 .commander-damage-grid.player-count-4 .commander-damage-counter:nth-child(4) {
+  grid-area: 1 / 1 / 2 / 2;  /* Top left */
+}
+
+/* For panels 3-4 (right side up) */
+.panel-3 .commander-damage-grid.player-count-4 .commander-damage-counter:nth-child(1),
+.panel-4 .commander-damage-grid.player-count-4 .commander-damage-counter:nth-child(1) {
+  grid-area: 1 / 1 / 2 / 2;  /* Top left */
+}
+
+.panel-3 .commander-damage-grid.player-count-4 .commander-damage-counter:nth-child(2),
+.panel-4 .commander-damage-grid.player-count-4 .commander-damage-counter:nth-child(2) {
+  grid-area: 1 / 2 / 2 / 3;  /* Top right */
+}
+
+.panel-3 .commander-damage-grid.player-count-4 .commander-damage-counter:nth-child(3),
+.panel-4 .commander-damage-grid.player-count-4 .commander-damage-counter:nth-child(3) {
+  grid-area: 2 / 1 / 3 / 2;  /* Bottom left */
+}
+
+.panel-3 .commander-damage-grid.player-count-4 .commander-damage-counter:nth-child(4),
+.panel-4 .commander-damage-grid.player-count-4 .commander-damage-counter:nth-child(4) {
+  grid-area: 2 / 2 / 3 / 3;  /* Bottom right */
+}
+
 .grid-5-players {
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(2, 1fr);
