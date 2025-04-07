@@ -524,6 +524,7 @@ const ControlPanel = () => {
           <Tab $active={activeTab === "theme"} onClick={() => setActiveTab("theme")}>Theme</Tab>
           <Tab $active={activeTab === "menu"} onClick={() => setActiveTab("menu")}>Menu</Tab>
           <Tab $active={activeTab === "raffle"} onClick={() => setActiveTab("raffle")}>Raffle</Tab>
+          <Tab $active={activeTab === "banner"} onClick={() => setActiveTab("banner")}>Banner</Tab>
         </TabContainer>
 
         <TabContent $active={activeTab === "main"}>
