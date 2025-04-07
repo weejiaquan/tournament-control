@@ -2,19 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import { API_URL } from '../../config';
+import '../../css/tablet/login.css';
 
 const Login = () => {
   const [searchParams] = useSearchParams();
   const [playerName, setPlayerName] = useState('');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [socket, setSocket] = useState(null);
+  const [favoriteColor, setFavoriteColor] = useState('#ffffff'); // State for color picker
 
   const tabletId = searchParams.get('tabletid');
   const position = searchParams.get('position');
 
-
   useEffect(() => {
-    // Check if already logged in
     const savedName = localStorage.getItem(`player_${tabletId}_${position}`);
     if (savedName) {
       setPlayerName(savedName);
@@ -24,14 +24,12 @@ const Login = () => {
     const newSocket = io(API_URL);
     setSocket(newSocket);
 
-    // Listen for logout events from tablet
     newSocket.on('playerLogout', (data) => {
       if (data.tabletId === tabletId && data.position === position) {
         handleLogoutCleanup();
       }
     });
 
-    // Keep this as a backup to ensure sync
     newSocket.on('playerUpdate', (data) => {
       if (data.tabletId === tabletId &&
         data.position === position &&
@@ -45,8 +43,10 @@ const Login = () => {
 
   const handleLogoutCleanup = () => {
     localStorage.removeItem(`player_${tabletId}_${position}`);
+    localStorage.removeItem(`color_${tabletId}_${position}`); // Remove the color from localStorage
     setIsLoggedIn(false);
     setPlayerName('');
+    setFavoriteColor('#ffffff'); // Reset the color to default
   };
 
   const handleLogout = () => {
@@ -54,7 +54,8 @@ const Login = () => {
       socket.emit('playerLogout', {
         tabletId,
         position,
-        playerName
+        playerName,
+        favoriteColor,
       });
       handleLogoutCleanup();
     }
@@ -67,10 +68,11 @@ const Login = () => {
       socket.emit('playerLogin', {
         tabletId,
         position,
-        playerName
+        playerName,
+        favoriteColor
       });
-      // Save login state
       localStorage.setItem(`player_${tabletId}_${position}`, playerName);
+      localStorage.setItem(`color_${tabletId}_${position}`, favoriteColor); // Save the color
       setIsLoggedIn(true);
     }
   };
@@ -101,6 +103,25 @@ const Login = () => {
               required
             />
           </div>
+          <div className="background-color">
+            <label htmlFor="favoriteColor">Pick your favorite color:</label>
+            <input
+              type="color"
+              id="favoriteColor"
+              value={favoriteColor}
+              onChange={(e) => setFavoriteColor(e.target.value)}
+            />
+          </div>
+
+          {/* Selected color box */}
+          <div
+            className="selected-color-box"
+            style={{
+              backgroundColor: favoriteColor, // Keep this dynamic style
+            }}
+          >
+            <p>Selected Color</p>
+          </div>
           <button type="submit">Join Game</button>
         </form>
       )}
@@ -108,4 +129,4 @@ const Login = () => {
   );
 };
 
-export default Login; // Add this line at the end
+export default Login;

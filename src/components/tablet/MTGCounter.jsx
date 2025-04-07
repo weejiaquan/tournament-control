@@ -464,6 +464,12 @@ const MTGCounter = () => {
       const life = lifePoints[position] ?? 40;
       const delta = deltas[position];
 
+      //color changer
+      const playerColor = playerName && !playerName.startsWith('Guest')
+      ? localStorage.getItem(`color_${tabletId}_${position}`) || '#ffffff' // Use saved color or default to white
+      : '#ffffff'; // Default to white for guests or logged-out players
+
+
       // Find player's final rank if game is over
       const playerRank = showGameOver ?
         gameStats.findIndex(stat => stat.position === String(position)) + 1 :
@@ -474,6 +480,9 @@ const MTGCounter = () => {
         <div
           key={index}
           className={`panel panel-${position} ${isActive ? 'active' : ''} ${isSelected ? 'selected' : ''}`}
+          style={{
+            backgroundColor: playerColor, // Set the background color dynamically
+          }}
         >
           {playerName ? (
             <div className="player-content">
@@ -566,6 +575,7 @@ const MTGCounter = () => {
           ) : (
             <div className="login-container">
               <p>Scan to login</p>
+              <p> {getLoginUrl(position)}</p>
               <QRCodeSVG value={getLoginUrl(position)} size={200} />
               <button
                 onClick={() => handleGuestLogin(position)}
