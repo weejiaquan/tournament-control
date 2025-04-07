@@ -8,6 +8,7 @@ const Login = () => {
   const [playerName, setPlayerName] = useState('');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [socket, setSocket] = useState(null);
+  const [favoriteColor, setFavoriteColor] = useState('#ffffff'); // State for color picker
 
   const tabletId = searchParams.get('tabletid');
   const position = searchParams.get('position');
@@ -44,19 +45,24 @@ const Login = () => {
   }, [tabletId, position]);
 
   const handleLogoutCleanup = () => {
+    console.log('Logging out and resetting color'); // Debugging log
     localStorage.removeItem(`player_${tabletId}_${position}`);
+    localStorage.removeItem(`color_${tabletId}_${position}`); // Remove the color from localStorage
     setIsLoggedIn(false);
     setPlayerName('');
+    setFavoriteColor('#ffffff'); // Reset the color to default
   };
-
+  
   const handleLogout = () => {
     if (socket) {
       socket.emit('playerLogout', {
         tabletId,
         position,
-        playerName
+        playerName,
+        favoriteColor,
       });
       handleLogoutCleanup();
+      console.log('Favorite color after logout:', favoriteColor); // Debugging log
     }
   };
 
@@ -67,10 +73,12 @@ const Login = () => {
       socket.emit('playerLogin', {
         tabletId,
         position,
-        playerName
+        playerName,
+        favoriteColor
       });
       // Save login state
       localStorage.setItem(`player_${tabletId}_${position}`, playerName);
+      localStorage.setItem(`color_${tabletId}_${position}`, favoriteColor); // Save the color
       setIsLoggedIn(true);
     }
   };
@@ -79,15 +87,17 @@ const Login = () => {
     <div className="login-page">
       <h1>Player Login</h1>
       {isLoggedIn ? (
-        <div className="logged-in-view">
-          <h2>Welcome, {playerName}!</h2>
-          <p>You are ready to play</p>
-          <button
-            onClick={handleLogout}
-            className="logout-button"
-          >
-            Logout
-          </button>
+        <div>
+          <div className="logged-in-view">
+            <h2>Welcome, {playerName}!</h2>
+            <p>You are ready to play</p>
+            <button
+              onClick={handleLogout}
+              className="logout-button"
+            >
+              Logout
+            </button>
+          </div>
         </div>
       ) : (
         <form onSubmit={handleSubmit}>
@@ -101,6 +111,29 @@ const Login = () => {
               required
             />
           </div>
+          <div className="background-color">
+            <label htmlFor="favoriteColor">Pick your favorite color:</label>
+            <input
+              type="color"
+              id="favoriteColor"
+              value={favoriteColor}
+              onChange={(e) => setFavoriteColor(e.target.value)}
+            />
+          </div>
+
+          {/* Selected color box */}
+        <div
+          className="selected-color-box"
+          style={{
+            backgroundColor: favoriteColor,
+            width: '200px',
+            height: '27px',
+            marginTop: '10px',
+            border: '1px solid #000',
+          }}
+        >
+          <p style={{ textAlign: 'center', color: '#fff', margin: 0 }}>Selected Color</p>
+        </div>
           <button type="submit">Join Game</button>
         </form>
       )}
