@@ -6,21 +6,21 @@ let landingState = {
   style: {}
 };
 
-router.get('/api/BannerDisplay/text', (req, res) => {
+router.get('/api/landing/text', (req, res) => {
   res.json({ text: landingState.text });
 });
 
-router.post('/api/BannerDisplay/text', (req, res) => {
+router.post('/api/landing/text', (req, res) => {
   const { text } = req.body;
   landingState.text = text;
   res.json({ success: true });
 });
 
-router.get('/api/BannerDisplay/style', (req, res) => {
+router.get('/api/landing/style', (req, res) => {
   res.json(landingState.style);
 });
 
-router.post('/api/BannerDisplay/style', (req, res) => {
+router.post('/api/landing/style', (req, res) => {
   const { style } = req.body;
   landingState.style = style;
   res.json(landingState.style);
