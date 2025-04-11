@@ -489,6 +489,23 @@ const ControlPanel = () => {
     fetchGradients();
   }, []);
 
+
+  //banner stuff
+  const [bannerText, setBannerText] = useState('');
+  useEffect(() => {
+    const fetchBannerText = async () => {
+      try {
+        const response = await fetch(`${API_URL}/api/banner/text`);
+        const data = await response.json();
+        setBannerText(data.text || '');
+      } catch (error) {
+        console.error('Failed to fetch banner text:', error);
+      }
+    };
+  
+    fetchBannerText();
+  }, []);
+
   return (
     <>
       <GlobalStyle />
@@ -515,16 +532,73 @@ const ControlPanel = () => {
             >
               Raffle
             </SceneButton>
+            <SceneButton
+              $active={currentScene === "banner"}
+              onClick={() => handleSceneChange("banner")}
+            >
+              Banner
+          </SceneButton>
           </ButtonGroup>
         </SceneSelector>
         <Title>Control Panel</Title>
+        {currentScene === "banner" && (
+          <BannerDisplay>
+            <h1>{bannerText}</h1>
+          </BannerDisplay>
+        )}
+
+        {/* Other scenes */}
+        {currentScene === "landing" && <div>Landing Page Content</div>}
+        {currentScene === "timer" && <div>Timer Page Content</div>}
+        {currentScene === "raffle" && <div>Raffle Page Content</div>}
 
         <TabContainer>
           <Tab $active={activeTab === "main"} onClick={() => setActiveTab("main")}>Main</Tab>
           <Tab $active={activeTab === "theme"} onClick={() => setActiveTab("theme")}>Theme</Tab>
           <Tab $active={activeTab === "menu"} onClick={() => setActiveTab("menu")}>Menu</Tab>
           <Tab $active={activeTab === "raffle"} onClick={() => setActiveTab("raffle")}>Raffle</Tab>
+          <Tab $active={activeTab === "banner"} onClick={() => setActiveTab("banner")}>Banner</Tab>
         </TabContainer>
+
+        <TabContent $active={activeTab === "banner"}>
+          <Section>
+            <SectionTitle>Banner Text Customization</SectionTitle>
+            <InputGroup>
+              <StyledTextArea
+                value={bannerText}
+                onChange={(e) => setBannerText(e.target.value)}
+                placeholder="Enter banner text here"
+                rows={4}
+              />
+              <ButtonGroup>
+                <Button
+                  onClick={async () => {
+                    try {
+                      await fetch(`${API_URL}/api/banner/text`, {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ text: bannerText }),
+                      });
+                      alert('Banner text updated successfully!');
+                    } catch (error) {
+                      console.error('Failed to update banner text:', error);
+                    }
+                  }}
+                >
+                  Update Banner
+                </Button>
+                <Button
+                  onClick={() => setBannerText('')}
+                  style={{ background: '#6c757d' }}
+                >
+                  Clear Text
+                </Button>
+              </ButtonGroup>
+            </InputGroup>
+          </Section>
+        </TabContent>
 
         <TabContent $active={activeTab === "main"}>
           <Section>
